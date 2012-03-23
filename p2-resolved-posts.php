@@ -120,8 +120,6 @@ class P2_Resolved_Posts {
 	 	}
 	 	if ( isset( $_GET['order'] ) && in_array( strtolower( $_GET['order'] ), array( 'asc', 'desc' ) ) )
 	 		$qvs['order'] = sanitize_key( $_GET['order'] );
-		
-		bump_stats_extra( 'a8c-p2-resolved-posts', 'posts-filtered-to-' . $qvs['resolved'] );
 
 		return $qvs;
 	}
@@ -345,7 +343,6 @@ class P2_Resolved_Posts {
 			
 		// If there were no errors, set the post in that state
 		if ( !$error ) {
-			bump_stats_extra( 'a8c-p2-resolved-posts', 'state-changed-to-' . $normal );
 			if ( $state == 'normal' )
 				$state = '';
 			wp_set_object_terms( $post->ID, (array)$state, self::taxonomy, false );
