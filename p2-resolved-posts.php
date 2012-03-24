@@ -8,16 +8,10 @@
  */
 
 /**
- * Andrew Nacin wrote this plugin, but Daniel Bachhuber had to mostly rewrite it because it didn't work at all
- * when I added it to WordPress.com
+ * Andrew Nacin wrote this plugin,
+ * but Daniel Bachhuber mostly rewrote it because it didn't work at all
+ * when he added it to WordPress.com
  * Original source: https://gist.github.com/1353754
- */
-
-/**
- * Improvements tk
- * - Audit log for those flagging the post
- * -Comments are closed when a thread is “resolved” but you can spin off a new thread that’s logged as a trackback
- * - Pin a comment as "the resolution" to the top of the comment thread
  */
 
 /**
