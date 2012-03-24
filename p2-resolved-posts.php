@@ -4,20 +4,14 @@
  * Author: Daniel Bachhuber (and Andrew Nacin)
  * Author URI: http://danielbachhuber.com/
  * Contributors: Hugo Baeta (css)
- * Version: 0.0
+ * Version: 0.1
  */
 
 /**
- * Andrew Nacin wrote this plugin, but Daniel Bachhuber had to mostly rewrite it because it didn't work at all
- * when I added it to WordPress.com
+ * Andrew Nacin wrote this plugin,
+ * but Daniel Bachhuber mostly rewrote it because it didn't work at all
+ * when he added it to WordPress.com
  * Original source: https://gist.github.com/1353754
- */
-
-/**
- * Improvements tk
- * - Audit log for those flagging the post
- * -Comments are closed when a thread is “resolved” but you can spin off a new thread that’s logged as a trackback
- * - Pin a comment as "the resolution" to the top of the comment thread
  */
 
 /**
@@ -120,8 +114,6 @@ class P2_Resolved_Posts {
 	 	}
 	 	if ( isset( $_GET['order'] ) && in_array( strtolower( $_GET['order'] ), array( 'asc', 'desc' ) ) )
 	 		$qvs['order'] = sanitize_key( $_GET['order'] );
-		
-		bump_stats_extra( 'a8c-p2-resolved-posts', 'posts-filtered-to-' . $qvs['resolved'] );
 
 		return $qvs;
 	}
@@ -345,7 +337,6 @@ class P2_Resolved_Posts {
 			
 		// If there were no errors, set the post in that state
 		if ( !$error ) {
-			bump_stats_extra( 'a8c-p2-resolved-posts', 'state-changed-to-' . $normal );
 			if ( $state == 'normal' )
 				$state = '';
 			wp_set_object_terms( $post->ID, (array)$state, self::taxonomy, false );
@@ -427,7 +418,7 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
 	function update( $new_instance, $old_instance ) {
 		$instance = $old_instance;
 		$new_instance = wp_parse_args((array) $new_instance, array( 'title' => ''));
-		$instance['title'] = strip_tags($new_instance['title']);
+		$instance['title'] = sanitize_text_field( $new_instance['title'] );
 		return $instance;
 	}
 
