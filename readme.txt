@@ -33,5 +33,8 @@ Feel free to ask a question in the forums!
 
 == Changelog ==
 
+= 0.2 (??? ?? ????) =
+* Display an error notice if you've activated the plugin but P2 isn't the currently active theme
+
 = 0.1 (Mar. 23, 2012) =
 * Initial release with basic ability to mark a post as "unresolved" and then "resolved"

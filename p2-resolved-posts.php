@@ -35,8 +35,12 @@ class P2_Resolved_Posts {
 	 * Sets up initial hooks, if the P2 theme is in play.
 	 */
 	function after_setup_theme() {
-		if ( ! class_exists( 'P2' ) )
+
+		if ( ! class_exists( 'P2' ) ) {
+			// Don't run the plugin if P2 isn't active, but display an admin notice
+			add_action( 'admin_notices', array( $this, 'action_admin_notices' ) );
 			return;
+		}
 		
 		add_action( 'wp_head', array( &$this, 'action_wp_head_css' ) );
 		add_action( 'wp_head', array( &$this, 'action_wp_head_ajax' ) );
@@ -48,6 +52,14 @@ class P2_Resolved_Posts {
 		$this->register_taxonomy();
 		if ( ! term_exists( 'unresolved', self::taxonomy ) )
 			wp_insert_term( 'unresolved', self::taxonomy );
+	}
+
+	/**
+	 * Display an admin notice if the plugin is active but P2 isn't enabled
+	 */
+	function action_admin_notices() {
+		$message = sprintf( __( "P2 Resolved Posts is enabled. You'll also need to activate the <a href='%s' target='_blank'>P2 theme</a> to start using the plugin.", 'p2-resolve' ), 'http://p2theme.com/' );
+		echo '<div class="error"><p>' . $message . '</p></div>';
 	}
 
 	/**
