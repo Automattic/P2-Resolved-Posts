@@ -22,13 +22,14 @@ class P2_Resolved_Posts {
 	static $instance;
 	
 	const taxonomy = 'p2_resolved';
+	const audit_log_key = 'p2_resolved_log';
 
 	/**
 	 * Constructor. Saves instance and sets up initial hook.
 	 */
 	function __construct() {
 		self::$instance = $this;
-		add_action( 'after_setup_theme', array( &$this, 'after_setup_theme' ) );
+		add_action( 'after_setup_theme', array( $this, 'after_setup_theme' ) );
 	}
 
 	/**
@@ -42,13 +43,13 @@ class P2_Resolved_Posts {
 			return;
 		}
 		
-		add_action( 'wp_head', array( &$this, 'action_wp_head_css' ) );
-		add_action( 'wp_head', array( &$this, 'action_wp_head_ajax' ) );
-		add_action( 'init', array( &$this, 'action_init_handle_state_change' ) );
-		add_action( 'p2_action_links', array( &$this, 'p2_action_links' ), 100 );
-		add_filter( 'post_class', array( &$this, 'post_class' ), 10, 3 );
-		add_action( 'widgets_init', array( &$this, 'widgets_init' ) );
-		add_filter( 'request', array( &$this, 'request' ) );
+		add_action( 'wp_head', array( $this, 'action_wp_head_css' ) );
+		add_action( 'wp_head', array( $this, 'action_wp_head_ajax' ) );
+		add_action( 'init', array( $this, 'action_init_handle_state_change' ) );
+		add_action( 'p2_action_links', array( $this, 'p2_action_links' ), 100 );
+		add_filter( 'post_class', array( $this, 'post_class' ), 10, 3 );
+		add_action( 'widgets_init', array( $this, 'widgets_init' ) );
+		add_filter( 'request', array( $this, 'request' ) );
 		$this->register_taxonomy();
 		if ( ! term_exists( 'unresolved', self::taxonomy ) )
 			wp_insert_term( 'unresolved', self::taxonomy );
@@ -89,8 +90,8 @@ class P2_Resolved_Posts {
 		// Just to be safe
 		$qvs['resolved'] = sanitize_key( $qvs['resolved'] );
 
-		add_action( 'parse_query', array( &$this, 'parse_query' ) );
-		add_filter( 'template_include', array( &$this, 'force_home_template' ) );
+		add_action( 'parse_query', array( $this, 'parse_query' ) );
+		add_filter( 'template_include', array( $this, 'force_home_template' ) );
 
 		if ( ! isset( $qvs['tax_query'] ) )
 			$qvs['tax_query'] = array();
@@ -186,6 +187,17 @@ class P2_Resolved_Posts {
 		
 		echo ' | <a title="' . esc_attr( $title ) . '" href="' . esc_url( $link ) . '" class="' . implode( ' ', $css ) . '">' . esc_html( $text ) . '</a>';
 
+		// Hide our audit log output here too
+		$audit_logs = get_post_meta( get_the_id(), self::audit_log_key );
+		$audit_logs = array_reverse( $audit_logs, true );
+
+		$audit_log_output = '<ul class="p2-resolved-posts-audit-log">';
+		foreach( $audit_logs as $audit_log ) {
+			$audit_log_output .= $this->single_audit_log_output( $audit_log );
+		}
+		$audit_log_output .= '</ul>';
+		echo $audit_log_output;
+
 	}
 	
 	/**
@@ -241,7 +253,50 @@ class P2_Resolved_Posts {
 		#main #postlist li.post .actions a.p2-resolve-link.p2-resolve-ajax-action {
 			background-color: #888;
 		}
-			
+
+		#main #postlist li.post ul.p2-resolved-posts-audit-log {
+			background-color: #FFFFFF;
+			padding-top: 3px;
+			padding-bottom: 3px;
+			padding-left: 10px;
+			padding-right: 10px;
+			position: absolute;
+			right: 0;
+			width: 225px;
+			z-index: 1000;
+			border: 1px solid #CCCCCC;
+			display: none;
+		}
+
+		#main #postlist li.post ul.p2-resolved-posts-audit-log li {
+			list-style-type: none;
+			color: #777;
+			opacity: 0.6;
+			border-top: none;
+			border-bottom: none;
+			padding-top: 2px;
+			padding-bottom: 2px;
+		}
+
+		#main #postlist li.post ul.p2-resolved-posts-audit-log li img {
+			float: left;
+			margin-right: 0;
+			margin-top: 4px;
+		}
+
+		#main #postlist li.post ul.p2-resolved-posts-audit-log li span.audit-log-text {
+			margin-left: 25px;
+			display: block;
+		}
+
+		#main #postlist li.post ul.p2-resolved-posts-audit-log li span.date-time {
+			font-size: 10px;
+		}
+
+		#main #postlist li.post ul.p2-resolved-posts-audit-log li:first-child {
+			opacity: 1.0;
+		}
+
 		</style>
 		<?
 	}
@@ -254,13 +309,32 @@ class P2_Resolved_Posts {
 		<script type="text/javascript">
 		
 		jQuery(document).ready(function(){
+
+			// Display the most recent audit log for each post
+			jQuery('#main #postlist li.post .p2-resolved-posts-audit-log').each( function() {
+				jQuery('li', this).last().show();
+			});
+
+			jQuery('.actions .p2-resolve-link').hover(
+				function(){
+					var audit_log = jQuery(this).closest('.post').find('.p2-resolved-posts-audit-log');
+					if ( audit_log.find('li').length )
+						audit_log.show();
+				},
+				function(){
+					var audit_log = jQuery(this).closest('.post').find('.p2-resolved-posts-audit-log');
+					audit_log.hide();
+				}
+				);
+
 			jQuery('.actions .p2-resolve-link').click(function(){
 				var original_link = jQuery(this);
 				// Mark the thread as unresolved
 				jQuery(this).html('Saving...');
 				jQuery(this).addClass('p2-resolve-ajax-action');
 				jQuery.get( original_link.attr('href') + '&ajax', function(data){
-					if ( data.indexOf('1') == 0 ) {
+					// The update was successful
+					if ( data.indexOf('<') == 0 ) {
 						// Depending on the action we took, update the DOM
 						// Need to replace the text, href and the title attribute
 						if ( original_link.attr('href').indexOf('mark=unresolved') != -1 ) {
@@ -285,6 +359,9 @@ class P2_Resolved_Posts {
 							original_link.html('<?php _e("Flag Unresolved","p2-resolve"); ?>');
 							original_link.attr('title','<?php _e("Flag as Unresolved","p2-resolve"); ?>');
 						}
+						// Update the audit log
+						original_link.closest('.post').find('ul.p2-resolved-posts-audit-log').prepend( data );
+
 					} else {
 						// Display the error if it happened
 						original_link.html(data);
@@ -311,7 +388,7 @@ class P2_Resolved_Posts {
 			$classes[] = 'state-unresolved';
 		return $classes;
 	}
-	
+
 	/**
 	 * Handle changing the state between 'unresolved', 'resolved' and normal
 	 */
@@ -352,7 +429,11 @@ class P2_Resolved_Posts {
 			if ( $state == 'normal' )
 				$state = '';
 			wp_set_object_terms( $post->ID, (array)$state, self::taxonomy, false );
-			$message = '1';
+			$args = array(
+					'new_state' => $state,
+				);
+			$args = $this->log_state_change( $post->ID, $args );
+			$message = $this->single_audit_log_output( $args );
 		} else {
 			$message = $error;
 		}
@@ -365,6 +446,55 @@ class P2_Resolved_Posts {
 		}	
 		die;
 		
+	}
+
+	/**
+	 * Log when a post has changed resolution state.
+	 * Don't blow away existing logs though.
+	 *
+	 * @since 0.2
+	 */
+	function log_state_change( $post_id, $args = array() ) {
+
+		$defaults = array(
+				'user_login' => wp_get_current_user()->user_login,
+				'new_state' => '',
+				'timestamp' => time(),
+			);
+		$args = array_merge( $defaults, $args );
+		add_post_meta( $post_id, self::audit_log_key, $args );
+		return $args;
+	}
+
+	/**
+	 * Produce the HTML for a single audit log
+	 *
+	 * @since 0.2
+	 */
+	function single_audit_log_output( $args ) {
+
+		$date = get_date_from_gmt( date( 'Y-m-d H:i:s', $args['timestamp'] ), get_option( 'date_format' ) );
+		$time = get_date_from_gmt( date( 'Y-m-d H:i:s', $args['timestamp'] ), get_option( 'time_format' ) );
+		$date_time = sprintf( __( '<span class="date-time">%1$s on %2$s</span>', 'p2-resolve' ), $time, $date );
+
+		$user = get_user_by( 'login', $args['user_login'] );
+		// Accomodate for removed users
+		if ( $user ) {
+			$avatar = get_avatar( $user->ID, 16 );
+			$display_name = $user->display_name;
+		} else {
+			$avatar = '';
+			$display_name = __( 'Someone', 'p2-resolve' );
+		}
+
+		// If there's a 'resolved' or 'unresolved' state currently set
+		if ( $args['new_state'] )
+			$text = sprintf( __( '%1$s marked this %2$s<br />%3$s', 'p2-resolve' ), $display_name, $args['new_state'], $date_time );
+		else
+			$text = sprintf( __( '%1$s removed resolution<br />%2$s', 'p2-resolve' ), $display_name, $date_time );
+
+		$html = '<li>' . $avatar . '<span class="audit-log-text">' . $text . '</span></li>';
+		return $html;
 	}
 
 }
@@ -458,7 +588,7 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
 		);
 		parent::__construct( 'p2_resolved_posts_show_unresolved_posts', __( 'P2 Unresolved Posts', 'p2-resolved-posts' ), $widget_ops );
 
-		add_action( 'wp_head', array( &$this, 'action_wp_head' ) );
+		add_action( 'wp_head', array( $this, 'action_wp_head' ) );
  		
  	}
 
