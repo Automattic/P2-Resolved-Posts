@@ -53,6 +53,11 @@ class P2_Resolved_Posts {
 		$this->register_taxonomy();
 		if ( ! term_exists( 'unresolved', self::taxonomy ) )
 			wp_insert_term( 'unresolved', self::taxonomy );
+
+		// Posts can be marked unresolved automatically by default
+		// if the user wishes
+		if ( apply_filters( 'p2_resolved_posts_mark_new_as_unresolved', false ) )
+			add_action( 'publish_post', array( $this, 'mark_new_as_unresolved' ) );
 	}
 
 	/**
@@ -495,6 +500,21 @@ class P2_Resolved_Posts {
 
 		$html = '<li>' . $avatar . '<span class="audit-log-text">' . $text . '</span></li>';
 		return $html;
+	}
+
+	/**
+	 * Automatically mark a newly published post as unresolved
+	 * To enable, include the following in your theme's functions.php:
+	 * - add_filter( 'p2_resolved_posts_mark_new_as_unresolved', '__return_true' );
+	 *
+	 * @since 0.2
+	 */
+	function mark_new_as_unresolved( $post_id ) {
+		wp_set_post_terms( $post_id, array( 'unresolved' ), self::taxonomy );
+		$args = array(
+					'new_state' => 'unresolved',
+				);
+		$this->log_state_change( $post_id, $args );
 	}
 
 }
