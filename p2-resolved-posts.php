@@ -190,7 +190,7 @@ class P2_Resolved_Posts {
 			$text = __( 'Flag Unresolved', 'p2-resolve' );
 		}
 		
-		$output = ' | <span class="p2-resolve-wrap"><a title="' . esc_attr( $title ) . '" href="' . esc_url( $link ) . '" class="' . implode( ' ', $css ) . '">' . esc_html( $text ) . '</a>';
+		$output = ' | <span class="p2-resolve-wrap"><a title="' . esc_attr( $title ) . '" href="' . esc_url( $link ) . '" class="' . esc_attr( implode( ' ', $css ) ) . '">' . esc_html( $text ) . '</a>';
 
 		// Hide our audit log output here too
 		$audit_logs = get_post_meta( get_the_id(), self::audit_log_key );
@@ -490,7 +490,7 @@ class P2_Resolved_Posts {
 
 		$date = get_date_from_gmt( date( 'Y-m-d H:i:s', $args['timestamp'] ), get_option( 'date_format' ) );
 		$time = get_date_from_gmt( date( 'Y-m-d H:i:s', $args['timestamp'] ), get_option( 'time_format' ) );
-		$date_time = sprintf( __( '<span class="date-time">%1$s on %2$s</span>', 'p2-resolve' ), $time, $date );
+		$date_time = sprintf( __( '<span class="date-time">%1$s on %2$s</span>', 'p2-resolve' ), esc_html( $time ), esc_html( $date ) );
 
 		$user = get_user_by( 'login', $args['user_login'] );
 		// Accomodate for removed users
@@ -504,9 +504,9 @@ class P2_Resolved_Posts {
 
 		// If there's a 'resolved' or 'unresolved' state currently set
 		if ( $args['new_state'] )
-			$text = sprintf( __( '%1$s marked this %2$s<br />%3$s', 'p2-resolve' ), $display_name, $args['new_state'], $date_time );
+			$text = sprintf( __( '%1$s marked this %2$s<br />%3$s', 'p2-resolve' ), esc_html( $display_name ), esc_html( $args['new_state'] ), esc_html( $date_time ) );
 		else
-			$text = sprintf( __( '%1$s removed resolution<br />%2$s', 'p2-resolve' ), $display_name, $date_time );
+			$text = sprintf( __( '%1$s removed resolution<br />%2$s', 'p2-resolve' ), esc_html( $display_name ), esc_html( $date_time ) );
 
 		$html = '<li>' . $avatar . '<span class="audit-log-text">' . $text . '</span></li>';
 		return $html;
@@ -819,11 +819,11 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
  				echo '<p class="p2-resolved-posts-show-unresolved-posts-pagination">';
  				if ( $unresolved_posts->found_posts > $posts_per_page )
 		 			echo '<a href="#" class="p2-resolved-posts-previous-posts p2-resolved-posts-pagination-link" class="inactive">' . __( '&larr;', 'p2-resolved-posts' ) . '</a>&nbsp;&nbsp;';
-		 		echo sprintf( __( 'Showing <span class="p2-resolved-posts-first-post">1</span>-<span class="p2-resolved-posts-last-post">%1$d</span> of <span class="p2-resolved-posts-total-posts">%2$d</span> unresolved posts'), $posts_per_page, $unresolved_posts->found_posts );
+		 		echo sprintf( __( 'Showing <span class="p2-resolved-posts-first-post">1</span>-<span class="p2-resolved-posts-last-post">%1$d</span> of <span class="p2-resolved-posts-total-posts">%2$d</span> unresolved posts'), esc_html( $posts_per_page ), esc_html( $unresolved_posts->found_posts ) );
 		 		if ( $unresolved_posts->found_posts > $posts_per_page )
 		 			echo '&nbsp;&nbsp;<a href="#" class="p2-resolved-posts-next-posts p2-resolved-posts-pagination-link">' . __( '&rarr;', 'p2-resolved-posts' ) . '</a>';
 		 		echo '</p>';
-		 		echo '<span class="hidden p2-resolved-posts-ppp">' . $posts_per_page . '</span>';
+		 		echo '<span class="hidden p2-resolved-posts-ppp">' . esc_html( $posts_per_page ) . '</span>';
  				echo '<ul>';
  				while( $unresolved_posts->have_posts() ) {
  					$unresolved_posts->the_post();
@@ -837,7 +837,7 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
 					echo get_avatar( $post->post_author, 32 );
 					echo '<div class="inner"><a href="' . get_permalink() . '" title="' . esc_attr( get_the_excerpt() ) . '">' . get_the_title() . '</a><br />';
 					$post_timestamp = strtotime( $post->post_date );
-					echo '<span>' . sprintf( __( '%s old', 'p2-resolved-posts' ), human_time_diff( $post_timestamp ) ) . ', ';
+					echo '<span>' . sprintf( __( '%s old', 'p2-resolved-posts' ), esc_html( human_time_diff( $post_timestamp ) ) ) . ', ';
 					comments_number( __( 'no comments', 'p2-resolved-posts' ), __( 'one comment', 'p2-resolved-posts' ), __( '% comments', 'p2-resolved-posts' ) );
 					echo '</span>';
 					echo '</div></li>';
