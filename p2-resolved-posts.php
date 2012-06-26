@@ -4,7 +4,7 @@
  * Author: Daniel Bachhuber (and Andrew Nacin)
  * Author URI: http://danielbachhuber.com/
  * Contributors: Hugo Baeta (css)
- * Version: 0.1
+ * Version: 0.2-working
  */
 
 /**
