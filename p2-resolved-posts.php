@@ -190,19 +190,19 @@ class P2_Resolved_Posts {
 			$text = __( 'Flag Unresolved', 'p2-resolve' );
 		}
 		
-		echo ' | <a title="' . esc_attr( $title ) . '" href="' . esc_url( $link ) . '" class="' . implode( ' ', $css ) . '">' . esc_html( $text ) . '</a>';
+		$output = ' | <span class="p2-resolve-wrap"><a title="' . esc_attr( $title ) . '" href="' . esc_url( $link ) . '" class="' . implode( ' ', $css ) . '">' . esc_html( $text ) . '</a>';
 
 		// Hide our audit log output here too
 		$audit_logs = get_post_meta( get_the_id(), self::audit_log_key );
 		$audit_logs = array_reverse( $audit_logs, true );
 
-		$audit_log_output = '<ul class="p2-resolved-posts-audit-log">';
+		$output .= '<ul class="p2-resolved-posts-audit-log">';
 		foreach( $audit_logs as $audit_log ) {
-			$audit_log_output .= $this->single_audit_log_output( $audit_log );
+			$output .= $this->single_audit_log_output( $audit_log );
 		}
-		$audit_log_output .= '</ul>';
-		echo $audit_log_output;
+		$output .= '</ul></span>';
 
+		echo $output;
 	}
 	
 	/**
@@ -315,20 +315,30 @@ class P2_Resolved_Posts {
 		
 		jQuery(document).ready(function(){
 
+			var p2_resolved_hover_in = null;
+			var p2_resolved_hover_out = null;
+
 			// Display the most recent audit log for each post
 			jQuery('#main #postlist li.post .p2-resolved-posts-audit-log').each( function() {
 				jQuery('li', this).last().show();
 			});
 
-			jQuery('.actions .p2-resolve-link').hover(
+			jQuery('.actions .p2-resolve-wrap').hover(
 				function(){
-					var audit_log = jQuery(this).closest('.post').find('.p2-resolved-posts-audit-log');
-					if ( audit_log.find('li').length )
-						audit_log.show();
+					clearTimeout( p2_resolved_hover_out );
+					var audit_log = jQuery(this).find('.p2-resolved-posts-audit-log');
+					if ( audit_log.find('li').length ) {
+						p2_resolved_hover_in = setTimeout( function() {
+							audit_log.fadeIn();
+						}, 1250 );
+					}
 				},
 				function(){
-					var audit_log = jQuery(this).closest('.post').find('.p2-resolved-posts-audit-log');
-					audit_log.hide();
+					clearTimeout( p2_resolved_hover_in );
+					var audit_log = jQuery(this).find('.p2-resolved-posts-audit-log');
+					p2_resolved_hover_out = setTimeout( function() {
+							audit_log.fadeOut();
+						}, 500 );
 				}
 				);
 
