@@ -504,9 +504,9 @@ class P2_Resolved_Posts {
 
 		// If there's a 'resolved' or 'unresolved' state currently set
 		if ( $args['new_state'] )
-			$text = sprintf( __( '%1$s marked this %2$s<br />%3$s', 'p2-resolve' ), esc_html( $display_name ), esc_html( $args['new_state'] ), esc_html( $date_time ) );
+			$text = sprintf( __( '%1$s marked this %2$s<br />%3$s', 'p2-resolve' ), esc_html( $display_name ), esc_html( $args['new_state'] ), $date_time );
 		else
-			$text = sprintf( __( '%1$s removed resolution<br />%2$s', 'p2-resolve' ), esc_html( $display_name ), esc_html( $date_time ) );
+			$text = sprintf( __( '%1$s removed resolution<br />%2$s', 'p2-resolve' ), esc_html( $display_name ), $date_time );
 
 		$html = '<li>' . $avatar . '<span class="audit-log-text">' . $text . '</span></li>';
 		return $html;
