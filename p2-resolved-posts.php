@@ -449,6 +449,7 @@ class P2_Resolved_Posts {
 				);
 			$args = $this->log_state_change( $post->ID, $args );
 			$message = $this->single_audit_log_output( $args );
+			clean_object_term_cache( $post->ID, $post->post_type );
 		} else {
 			$message = $error;
 		}
