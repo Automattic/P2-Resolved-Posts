@@ -20,7 +20,7 @@
 class P2_Resolved_Posts {
 
 	static $instance;
-	
+
 	const taxonomy = 'p2_resolved';
 	const audit_log_key = 'p2_resolved_log';
 
@@ -42,7 +42,7 @@ class P2_Resolved_Posts {
 			add_action( 'admin_notices', array( $this, 'action_admin_notices' ) );
 			return;
 		}
-		
+
 		add_action( 'wp_head', array( $this, 'action_wp_head_css' ) );
 		add_action( 'wp_head', array( $this, 'action_wp_head_ajax' ) );
 		add_action( 'init', array( $this, 'action_init_handle_state_change' ) );
@@ -91,7 +91,7 @@ class P2_Resolved_Posts {
 			unset( $qvs['resolved'] );
 			return $qvs;
 		}
-		
+
 		// Just to be safe
 		$qvs['resolved'] = sanitize_key( $qvs['resolved'] );
 
@@ -103,7 +103,7 @@ class P2_Resolved_Posts {
 
 		// Don't pay attention to sticky posts
 		$qvs['ignore_sticky_posts'] = 1;
-		
+
 		// Filter the query to just the type of posts we're looking for
 		$qvs['tax_query'][] = array(
 			'taxonomy' => self::taxonomy,
@@ -112,7 +112,7 @@ class P2_Resolved_Posts {
 			'operator' => 'IN',
 		);
 		if ( isset( $_GET['tags'] ) || isset( $_GET['post_tag'] ) ) {
-				$filter_tags = ( isset( $_GET['tags'] ) ) ? $_GET['tags'] : $_GET['post_tag']; 
+				$filter_tags = ( isset( $_GET['tags'] ) ) ? $_GET['tags'] : $_GET['post_tag'];
 			$filter_tags = (array)explode( ',', $filter_tags );
 	 		foreach( (array)$filter_tags as $filter_tag ) {
 	 			$filter_tag = sanitize_key( $filter_tag );
@@ -169,11 +169,11 @@ class P2_Resolved_Posts {
 			'nonce' => wp_create_nonce( 'p2-resolve-' . get_the_id() ),
 		);
 		$link = add_query_arg( $args, get_site_url() );
-		
+
 		$css = array(
 			'p2-resolve-link',
 		);
-		
+
 		if ( has_term( 'unresolved', self::taxonomy, get_the_id() ) ) {
 			$css[] = 'state-unresolved';
 			$link = add_query_arg( 'mark', 'resolved', $link );
@@ -189,7 +189,7 @@ class P2_Resolved_Posts {
 			$title = __( 'Flag as Unresolved', 'p2-resolve' );
 			$text = __( 'Flag Unresolved', 'p2-resolve' );
 		}
-		
+
 		$output = ' | <span class="p2-resolve-wrap"><a title="' . esc_attr( $title ) . '" href="' . esc_url( $link ) . '" class="' . esc_attr( implode( ' ', $css ) ) . '">' . esc_html( $text ) . '</a>';
 
 		// Hide our audit log output here too
@@ -204,19 +204,19 @@ class P2_Resolved_Posts {
 
 		echo $output;
 	}
-	
+
 	/**
 	 * Give our resolve and unresolved items a bit of CSS
 	 */
 	function action_wp_head_css() {
 		?>
 		<style type="text/css">
-		
+
 		#main #postlist li.post {
 			border-left: 8px solid #FFF;
 			padding-left: 7px;
 		}
-		
+
 		#main #postlist li.post.state-unresolved {
 			border-left-color: #E6000A;
 			-webkit-border-top-left-radius: 0;
@@ -225,11 +225,11 @@ class P2_Resolved_Posts {
 			-ms-border-radius-topleft: 0;
 			border-top-left-radius: 0;
 		}
-		
+
 		#main #postlist li.post.state-unresolved .actions a.p2-resolve-link {
 			background-color: #E6000A;
 		}
-		
+
 		#main #postlist li.post.state-resolved {
 			border-left-color: #009632;
 			-webkit-border-top-left-radius: 0;
@@ -238,11 +238,11 @@ class P2_Resolved_Posts {
 			-ms-border-radius-topleft: 0;
 			border-top-left-radius: 0;
 		}
-		
+
 		#main #postlist li.post.state-resolved .actions a.p2-resolve-link {
 			background-color: #009632;
 		}
-		
+
 		#main #postlist li.post.state-unresolved .actions a.p2-resolve-link,
 		#main #postlist li.post.state-resolved .actions a.p2-resolve-link {
 			color: #fff;
@@ -253,7 +253,7 @@ class P2_Resolved_Posts {
 			-ms-border-radius: 2px;
 			border-radius: 2px;
 		}
-		
+
 		#main #postlist li.post .actions a.p2-resolve-link:hover,
 		#main #postlist li.post .actions a.p2-resolve-link.p2-resolve-ajax-action {
 			background-color: #888;
@@ -305,14 +305,14 @@ class P2_Resolved_Posts {
 		</style>
 		<?
 	}
-	
+
 	/**
 	 * Javascript to make this whole operation run like AJAX
 	 */
 	function action_wp_head_ajax() {
 		?>
 		<script type="text/javascript">
-		
+
 		jQuery(document).ready(function(){
 
 			var p2_resolved_hover_in = null;
@@ -398,7 +398,7 @@ class P2_Resolved_Posts {
 	function post_class( $classes, $class, $post_id ) {
 		if ( has_term( 'resolved', self::taxonomy, $post_id ) )
 			$classes[] = 'state-resolved';
-		
+
 		if ( has_term( 'unresolved', self::taxonomy, $post_id ) )
 			$classes[] = 'state-unresolved';
 		return $classes;
@@ -412,12 +412,12 @@ class P2_Resolved_Posts {
 		// Bail if the action isn't ours
 		if ( !isset( $_GET['post-id'], $_GET['action'], $_GET['nonce'], $_GET['mark'] ) || $_GET['action'] != 'p2-resolve' )
 			return;
-			
+
 		$error = false;
 		$blog_id = get_current_blog_id();
 		$blog_id = get_current_blog_id();
 		$current_user = wp_get_current_user();
-		
+
 		$states = array(
 			'resolved',
 			'unresolved',
@@ -429,7 +429,7 @@ class P2_Resolved_Posts {
 		else
 			$error = __( 'Bad state', 'p2-resolve' );
 
-		$error = false;	
+		$error = false;
 		$post_id = intval( $_GET['post-id'] );
 
 		$post = get_post( $post_id );
@@ -438,7 +438,7 @@ class P2_Resolved_Posts {
 
 		if ( !wp_verify_nonce( $_GET['nonce'], 'p2-resolve-' . $post_id ) )
 			$error = __( "Nonce error", 'p2-resolve' );
-			
+
 		// If there were no errors, set the post in that state
 		if ( !$error ) {
 			if ( $state == 'normal' )
@@ -453,16 +453,16 @@ class P2_Resolved_Posts {
 			echo $message;
 		} else {
 			wp_safe_redirect( get_permalink( $post->ID ) );
-		}	
+		}
 		die;
-		
+
 	}
 
 	function change_state( $post_id, $state ) {
 		if ( ! taxonomy_exists( self::taxonomy ) )
 			$this->register_taxonomy();
 
-		wp_set_object_terms( $post->ID, (array)$state, self::taxonomy, false );
+		wp_set_object_terms( $post_id, (array)$state, self::taxonomy, false );
 		$args = array(
 				'new_state' => $state,
 			);
@@ -583,7 +583,7 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
 </ul>
 
 <?php
-	
+
 		echo $after_widget;
 	}
 
@@ -612,7 +612,7 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
  */
  class P2_Resolved_Posts_Show_Unresolved_Posts_Widget extends WP_Widget {
 
- 	private $widget_args = array( 
+ 	private $widget_args = array(
 		'title' => '',
 		'posts_per_page' => 5,
 		'order' => 'DESC',
@@ -627,7 +627,7 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
 		parent::__construct( 'p2_resolved_posts_show_unresolved_posts', __( 'P2 Unresolved Posts', 'p2-resolved-posts' ), $widget_ops );
 
 		add_action( 'wp_head', array( $this, 'action_wp_head' ) );
- 		
+
  	}
 
  	/**
@@ -686,7 +686,7 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
 						last_post = last_post + posts_per_page;
 						if ( last_post > total_posts )
 							last_post = total_posts;
-						
+
 					}
 					// Show posts based on our pagination counter
 					parent.find( 'ul li' ).removeClass('active').addClass('hidden');
@@ -700,11 +700,11 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
 					parent.find('.p2-resolved-posts-last-post').html( last_post );
 					return false;
 				});
-				
+
 			});
 		</script>
  		<?php
- 		
+
  	}
 
  	/**
@@ -730,7 +730,7 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
 				} ?>
 		</select>
 		</p>
-<?php	
+<?php
  	}
 
  	/**
@@ -860,5 +860,5 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
 
  		echo $after_widget;
  	}
- 	
+
  }
