@@ -443,12 +443,7 @@ class P2_Resolved_Posts {
 		if ( !$error ) {
 			if ( $state == 'normal' )
 				$state = '';
-			wp_set_object_terms( $post->ID, (array)$state, self::taxonomy, false );
-			$args = array(
-					'new_state' => $state,
-				);
-			$args = $this->log_state_change( $post->ID, $args );
-			$message = $this->single_audit_log_output( $args );
+			$message = $this->change_state( $post_id, $state );
 		} else {
 			$message = $error;
 		}
@@ -461,6 +456,19 @@ class P2_Resolved_Posts {
 		}	
 		die;
 		
+	}
+
+	function change_state( $post_id, $state ) {
+		if ( ! taxonomy_exists( self::taxonomy ) )
+			$this->register_taxonomy();
+
+		wp_set_object_terms( $post->ID, (array)$state, self::taxonomy, false );
+		$args = array(
+				'new_state' => $state,
+			);
+		$args = $this->log_state_change( $post_id, $args );
+
+		return $this->single_audit_log_output( $args );
 	}
 
 	/**
