@@ -14,6 +14,9 @@
  * Original source: https://gist.github.com/1353754
  */
 
+if ( defined('WP_CLI') && WP_CLI )
+	require_once( dirname( __FILE__ ) . '/php/class-wp-cli.php' );
+
 /**
  * @package P2_Resolved_Posts
  */
