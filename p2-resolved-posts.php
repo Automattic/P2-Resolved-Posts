@@ -462,6 +462,9 @@ class P2_Resolved_Posts {
 
 	}
 
+	/**
+	 * Change the state of a given post
+	 */
 	function change_state( $post_id, $state ) {
 		if ( ! taxonomy_exists( self::taxonomy ) )
 			$this->register_taxonomy();
