@@ -2,14 +2,18 @@
 Contributors: danielbachhuber, automattic
 Tags: gtd, productivity, workflow, p2
 Requires at least: 3.1
-Tested up to: 3.3.1
-Stable tag: 0.1
+Tested up to: 3.4.1
+Stable tag: 0.2
 
 Lightweight GTD for the P2 WordPress theme.
 
 == Description ==
 
-P2 Resolved Posts is a lightweight GTD plugin for WordPress and the P2 theme. Mark a thread as "unresolved" when there's something needing to be finished, and mark it as "resolved" when it's been finished. Sidebar widgets allow you to see all unresolved posts, optionally filtered to a specific tag.
+P2 Resolved Posts is a lightweight GTD plugin for WordPress and the P2 theme. Mark a thread as "unresolved" when there's something needing to be finished, and mark it as "resolved" when it's been finished.
+
+Sidebar widgets allow you to see all unresolved posts, optionally filtered to a specific tag.
+
+Watch the audit log to see who is doing what.
 
 P2 is a great tool for communication and collaboration. P2 Resolved Posts makes it easier to better understand when a discussion has reached completion.
 
@@ -32,6 +36,13 @@ If the automatic process above fails, follow these simple steps to do a manual i
 Feel free to ask a question in the forums!
 
 == Changelog ==
+
+= 0.2 (Jul. 18, 2012) =
+* Automatically mark new posts as unresolved by adding `add_filter( 'p2_resolved_posts_mark_new_as_unresolved', '__return_true' );` to your theme's functions.php. Thanks [macmeister](http://wordpress.org/support/topic/plugin-p2-resolved-posts-default-to-unresolved) for the request
+* Audit log records who changes the post state and when they change it. View the audit log by hovering over the action link
+* wp-cli command for the plugin includes a subcommand for programmatically changing the state of a post
+* Includes a POT file for localization. Translations welcome!
+* Display an error notice if you've activated the plugin but P2 isn't the currently active theme
 
 = 0.1 (Mar. 23, 2012) =
 * Initial release with basic ability to mark a post as "unresolved" and then "resolved"
