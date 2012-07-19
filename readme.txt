@@ -37,6 +37,7 @@ Feel free to ask a question in the forums!
 * Automatically mark new posts as unresolved by adding `add_filter( 'p2_resolved_posts_mark_new_as_unresolved', '__return_true' );` to your theme's functions.php. Thanks [macmeister](http://wordpress.org/support/topic/plugin-p2-resolved-posts-default-to-unresolved) for the request
 * Audit log records who changes the post state and when they change it. View the audit log by hovering over the action link
 * wp-cli command for the plugin includes a subcommand for programmatically changing the state of a post
+* Includes a POT file for localization. Translations welcome!
 * Display an error notice if you've activated the plugin but P2 isn't the currently active theme
 
 = 0.1 (Mar. 23, 2012) =

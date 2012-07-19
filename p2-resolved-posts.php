@@ -32,6 +32,9 @@ class P2_Resolved_Posts {
 	 */
 	function __construct() {
 		self::$instance = $this;
+
+		load_plugin_textdomain( 'p2-resolve', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+
 		add_action( 'after_setup_theme', array( $this, 'after_setup_theme' ) );
 	}
 
