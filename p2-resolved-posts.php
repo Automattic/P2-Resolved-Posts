@@ -262,7 +262,8 @@ class P2_Resolved_Posts {
 			background-color: #888;
 		}
 
-		#main #postlist li.post ul.p2-resolved-posts-audit-log {
+		#main #postlist li.post ul.p2-resolved-posts-audit-log,
+		#main .controls ul.p2-resolved-posts-audit-log {
 			background-color: #FFFFFF;
 			padding-top: 3px;
 			padding-bottom: 3px;
