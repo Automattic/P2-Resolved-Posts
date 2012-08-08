@@ -421,8 +421,6 @@ class P2_Resolved_Posts {
 			return;
 
 		$error = false;
-		$blog_id = get_current_blog_id();
-		$blog_id = get_current_blog_id();
 		$current_user = wp_get_current_user();
 
 		$states = array(
