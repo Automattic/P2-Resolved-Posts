@@ -11,15 +11,8 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
 			'description' => __( 'Allows querying of resolved and unresolved posts', 'p2-resolved-posts' )
 		);
 		parent::__construct( 'p2_resolved_posts', __( 'P2 Filter Posts' ), $widget_ops);
-
-		if ( is_active_widget( false, false, $this->id_base, true ) )
-			add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
-
 	}
 
-	function enqueue() {
-		wp_enqueue_script( 'p2-unresolved-posts-widget', plugins_url( 'js/unresolved-posts-widget.js', dirname( __FILE__ ) ), array( 'jquery' ), P2_RESOLVED_POSTS_VERSION, true );
-	}
 
 	function widget( $args, $instance ) {
 		extract( $args );
