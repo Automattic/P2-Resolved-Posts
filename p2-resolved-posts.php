@@ -62,7 +62,6 @@ class P2_Resolved_Posts {
 		add_filter( 'post_class', array( $this, 'post_class' ), 10, 3 );
 		add_action( 'widgets_init', array( $this, 'widgets_init' ) );
 		add_filter( 'request', array( $this, 'request' ) );
-		add_action( 'p2_post_form', array( $this, 'post_form' ) );
 		add_action( 'comment_post', array( $this, 'comment_submit' ), 10, 2 );
 		add_action( 'wp_insert_post', array( $this, 'post_submit' ), 10, 2 );
 		add_action( 'wp_ajax_p2_resolved_posts_get_status', array( $this, 'p2_action_links' ) );
@@ -72,10 +71,14 @@ class P2_Resolved_Posts {
 		if ( ! term_exists( 'unresolved', self::taxonomy ) )
 			wp_insert_term( 'unresolved', self::taxonomy );
 
-		// Posts can be marked unresolved automatically by default
-		// if the user wishes
-		if ( apply_filters( 'p2_resolved_posts_mark_new_as_unresolved', false ) )
+
+		// Posts can be marked unresolved automatically by default if the user wishes
+		// otherwise a checkbox is presented
+		if ( apply_filters( 'p2_resolved_posts_mark_new_as_unresolved', false ) ) {
 			add_action( 'publish_post', array( $this, 'mark_new_as_unresolved' ), 10, 2 );
+		} else {
+			add_action( 'p2_post_form', array( $this, 'post_form' ) );
+		}
 
 		// Comments can be closed automatically when a post is resolved
 		// if the user wishes
