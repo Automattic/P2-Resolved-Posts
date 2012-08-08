@@ -26,6 +26,9 @@ class P2_Resolved_Posts {
 
 	const taxonomy = 'p2_resolved';
 	const audit_log_key = 'p2_resolved_log';
+	const resolved_keyword = '!resolved';
+	const unresolved_keyword = '!unresolved';
+	const normal_keyword = '!normal';
 
 	/**
 	 * Constructor. Saves instance and sets up initial hook.
@@ -56,6 +59,11 @@ class P2_Resolved_Posts {
 		add_filter( 'post_class', array( $this, 'post_class' ), 10, 3 );
 		add_action( 'widgets_init', array( $this, 'widgets_init' ) );
 		add_filter( 'request', array( $this, 'request' ) );
+		add_action( 'comment_post', array( $this, 'comment_submit' ), 10, 2 );
+		add_action( 'wp_insert_post', array( $this, 'post_submit' ), 10, 2 );
+		add_action( 'wp_ajax_p2_resolved_posts_get_status', array( $this, 'p2_action_links' ) );
+		add_action( 'wp_ajax_no_priv_p2_resolved_posts_get_status', array( $this, 'p2_action_links' ) );
+
 		$this->register_taxonomy();
 		if ( ! term_exists( 'unresolved', self::taxonomy ) )
 			wp_insert_term( 'unresolved', self::taxonomy );
@@ -166,13 +174,16 @@ class P2_Resolved_Posts {
 
 	/**
 	 * Add our action links to the P2 post
+	 * also respond to ajax request to update the links
 	 */
 	function p2_action_links() {
 
+		$post_id = ( isset( $_GET['post-id'] ) ) ? $_GET['post-id'] : get_the_ID();
+
 		$args = array(
 			'action' => 'p2-resolve',
-			'post-id' => get_the_ID(),
-			'nonce' => wp_create_nonce( 'p2-resolve-' . get_the_id() ),
+			'post-id' => $post_id,
+			'nonce' => wp_create_nonce( 'p2-resolve-' . $post_id ),
 		);
 		$link = add_query_arg( $args, get_site_url() );
 
@@ -180,26 +191,31 @@ class P2_Resolved_Posts {
 			'p2-resolve-link',
 		);
 
-		if ( has_term( 'unresolved', self::taxonomy, get_the_id() ) ) {
-			$css[] = 'state-unresolved';
+		if ( has_term( 'unresolved', self::taxonomy, $post_id ) ) {
+			$state = 'unresolved';
 			$link = add_query_arg( 'mark', 'resolved', $link );
 			$title = __( 'Flag as Resolved', 'p2-resolve' );
 			$text = __( 'Unresolved', 'p2-resolve' );
-		} else if ( has_term( 'resolved', self::taxonomy, get_the_id() ) ) {
-			$css[] = 'state-resolved';
+		} else if ( has_term( 'resolved', self::taxonomy, $post_id ) ) {
+			$state = 'resolved';
 			$link = add_query_arg( 'mark', 'normal', $link );
 			$title = __( 'Remove Resolved Flag', 'p2-resolve' );
 			$text = __( 'Resolved', 'p2-resolve' );
 		} else {
+			$state = '';
 			$link = add_query_arg( 'mark', 'unresolved', $link );
 			$title = __( 'Flag as Unresolved', 'p2-resolve' );
 			$text = __( 'Flag Unresolved', 'p2-resolve' );
 		}
 
-		$output = ' | <span class="p2-resolve-wrap"><a title="' . esc_attr( $title ) . '" href="' . esc_url( $link ) . '" class="' . esc_attr( implode( ' ', $css ) ) . '">' . esc_html( $text ) . '</a>';
+		if ( !empty( $state ) )
+			$css[] = 'state-' . $state;
+
+		$output = ( defined( 'DOING_AJAX' ) && DOING_AJAX ) ? '' : ' | ';
+		$output .= '<span class="p2-resolve-wrap"><a title="' . esc_attr( $title ) . '" href="' . esc_url( $link ) . '" class="' . esc_attr( implode( ' ', $css ) ) . '">' . esc_html( $text ) . '</a>';
 
 		// Hide our audit log output here too
-		$audit_logs = get_post_meta( get_the_id(), self::audit_log_key );
+		$audit_logs = get_post_meta( $post_id, self::audit_log_key );
 		$audit_logs = array_reverse( $audit_logs, true );
 
 		$output .= '<ul class="p2-resolved-posts-audit-log">';
@@ -208,8 +224,124 @@ class P2_Resolved_Posts {
 		}
 		$output .= '</ul></span>';
 
-		echo $output;
+		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+			header( 'Content-Type: application/json' );
+			die( json_encode( array( 'output' => $output, 'state' => $state ) ) );
+		} else {
+			echo $output;
+		}
 	}
+
+	/**
+	 * process a comment after it's inserted and adjust the
+	 * resolved state as needed
+	 */
+	function comment_submit( $comment_id, $approved ) {
+		if ( 'spam' == $approved )
+			return;
+
+		$comment = get_comment( $comment_id );
+
+		if ( ! $this->string_contains_state_keywords( $comment->comment_content ) )
+			return;
+
+		$comment->comment_content = $this->process_string_post_resolved_state( $comment->comment_content, $comment->comment_post_ID );
+		wp_update_comment( (array) $comment );
+	}
+
+	/**
+	 * process a post after it's inserted and adjust the
+	 * resolved state as needed
+	 */
+	function post_submit( $post_id, $post ) {
+
+		if ( ! $this->string_contains_state_keywords( $post->post_content ) )
+			return;
+
+		$post->post_content = $this->process_string_post_resolved_state( $post->post_content, $post_id );
+		wp_update_post( $post );
+	}
+
+	/**
+	 * detect which keywords a string contains and change the
+	 * post's state accordingly, then strip the keyword
+	 */
+	function process_string_post_resolved_state( $string, $post_id ) {
+		if ( $this->string_contains_resolved_keyword( $string ) )
+			$this->change_state( $post_id, 'resolved' );
+
+		if ( $this->string_contains_unresolved_keyword( $string ) )
+			$this->change_state( $post_id, 'unresolved' );
+
+		if ( $this->string_contains_normal_keyword( $string ) )
+			$this->change_state( $post_id, 'normal' );
+
+		clean_object_term_cache( $post_id, get_post_type( $post_id ) );
+		return $this->erase_keywords_from_string( $string );
+	}
+
+	/**
+	 * detect if a string contains any of the keywords
+	 */
+	function string_contains_state_keywords( $string ) {
+		return $this->string_contains_helper( $string, array( self::resolved_keyword, self::unresolved_keyword, self::normal_keyword ) );
+	}
+
+	/**
+	 * detect if a string contains the resolved keyword
+	 */
+	function string_contains_resolved_keyword( $string ) {
+		return $this->string_contains_helper( $string, self::resolved_keyword );
+	}
+
+	/**
+	 * detect if a string contains the unresolved keyword
+	 */
+	function string_contains_unresolved_keyword( $string ) {
+		return $this->string_contains_helper( $string, self::unresolved_keyword );
+	}
+
+	/**
+	 * detect if a string contains the normal keyword
+	 */
+	function string_contains_normal_keyword( $string ) {
+		return $this->string_contains_helper( $string, self::normal_keyword );
+	}
+
+	/**
+	 * helper function to detect if a string contains contains the specified keywords
+	 */
+	function string_contains_helper( $string, $keywords ) {
+
+		if ( !is_array( $keywords ) )
+			$keywords = array( $keywords );
+
+		foreach ( $keywords as $keyword ) {
+			if ( false !== strpos( $string, $keyword ) )
+				return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * helper function to erase keywords from a string
+	 */
+	function erase_keywords_from_string( $string, $keywords = null ) {
+
+		if ( empty( $keywords ) )
+			$keywords = array( self::resolved_keyword, self::unresolved_keyword, self::normal_keyword );
+
+		if ( !is_array( $keywords ) )
+			$keywords = array( $keywords );
+
+		foreach ( $keywords as $keyword )
+			$string = str_replace( $keyword, '', $string );
+
+		return trim( $string );
+
+	}
+
 
 	/**
 	 * Give our resolve and unresolved items a bit of CSS
@@ -347,7 +479,39 @@ class P2_Resolved_Posts {
 							audit_log.fadeOut();
 						}, 500 );
 				}
-				);
+			);
+
+
+			jQuery('#wrapper').ajaxComplete(function(e, xhr, options){
+				if ( 'undefined' === typeof(options.data) )
+					return;
+
+				var query_string = options.data;
+				var query_vars = {};
+				query_string.replace(
+					new RegExp("([^?=&]+)(=([^&]*))?", "g"),
+    			function($0, $1, $2, $3) { query_vars[$1] = $3; }
+    		);
+
+        if ( 'undefined' === typeof( query_vars.comment_post_ID ) )
+        	return;
+
+      	var post_id = query_vars.comment_post_ID;
+
+      	jQuery.ajax({
+					type: 'GET',
+					url: '<?php echo $this->get_polling_ajax_uri(); ?>' + '&post-id=' + parseInt(post_id),
+					success: function( response ) {
+						$the_post = jQuery( '.post-' + post_id );
+						$the_post.removeClass( 'state-resolved', 'state-unresolved' );
+						if ( '' != response.state )
+							$the_post.addClass( 'state-' + response.state );
+
+						jQuery( '.post-' + post_id + ' .p2-resolve-wrap ').replaceWith( response.output );
+					}
+				});
+
+			});
 
 			jQuery('.actions .p2-resolve-link').click(function(){
 				var original_link = jQuery(this);
@@ -397,6 +561,10 @@ class P2_Resolved_Posts {
 		});
 		</script>
 		<?
+	}
+
+	function get_polling_ajax_uri() {
+		return add_query_arg( array( 'action' => 'p2_resolved_posts_get_status' ), wp_nonce_url( admin_url( 'admin-ajax.php' ), 'p2_resolved_posts_get_status' ) );
 	}
 
 	/**
