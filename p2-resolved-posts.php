@@ -74,6 +74,12 @@ class P2_Resolved_Posts {
 		// if the user wishes
 		if ( apply_filters( 'p2_resolved_posts_mark_new_as_unresolved', false ) )
 			add_action( 'publish_post', array( $this, 'mark_new_as_unresolved' ), 10, 2 );
+
+		// Comments can be closed automatically when a post is resolved
+		// if the user wishes
+		if ( apply_filters( 'p2_resolved_posts_close_comments_when_resolved', false ) )
+			add_action( 'p2_resolved_posts_changed_state', array( $this, 'close_comments' ), 10, 2 );
+
 	}
 
 	/**
@@ -620,6 +626,23 @@ class P2_Resolved_Posts {
 					'new_state' => 'unresolved',
 				);
 		$this->log_state_change( $post_id, $args );
+	}
+
+	/**
+	 * Automatically close comments on resolved posts
+	 * To enable, include the following in your theme's functions.php:
+	 * - add_filter( 'p2_resolved_posts_close_comments_when_resolved', '__return_true' );
+	 *
+	 * @since 0.3
+	 */
+	function close_comments( $state, $post_id ) {
+		if ( 'resolved' != $state )
+			return;
+
+		$the_post = get_post( $post_id );
+		$the_post->comment_status = 'closed';
+		wp_update_post( $the_post );
+
 	}
 
 }
