@@ -89,6 +89,26 @@
 	opacity: 1.0;
 }
 
+
+
+#postbox #new_post .p2_resolved_posts_mark_as_unresolved_checkbox {
+	margin: 5px 0;
+	padding: 5px 0;
+}
+
+#postbox #new_post .p2_resolved_posts_mark_as_unresolved_checkbox #p2_resolved_posts_mark_as_unresolved_checkbox {
+	float: left;
+	margin-right: 10px;
+}
+
+#postbox #new_post .p2_resolved_posts_mark_as_unresolved_checkbox .p2_resolved_posts_mark_as_unresolved_label {
+	font-size: 12px;
+	position: relative;
+	top: -2px;
+}
+
+
+
 #sidebar .p2-resolved-posts-show-unresolved-posts ul li img.avatar {
 	float: left;
 	padding-right: 8px;

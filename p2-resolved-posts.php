@@ -186,7 +186,17 @@ class P2_Resolved_Posts {
 	 */
 	function p2_action_links() {
 
-		$post_id = ( isset( $_GET['post-id'] ) ) ? $_GET['post-id'] : get_the_ID();
+		global $post;
+
+		$is_ajax_request = ( defined( 'DOING_AJAX' ) && DOING_AJAX && !empty( $_REQUEST['action'] ) && 'p2_resolved_posts_get_status' == $_REQUEST['action'] );
+
+		if ( $is_ajax_request && !empty( $_REQUEST['post-id'] ) ) {
+			$post_id = $_REQUEST['post-id'];
+		} elseif ( is_object( $post ) && !empty( $post->ID ) ) {
+			$post_id = $post->ID;
+		} else {
+			return;
+		}
 
 		$args = array(
 			'action' => 'p2-resolve',
@@ -219,20 +229,24 @@ class P2_Resolved_Posts {
 		if ( !empty( $state ) )
 			$css[] = 'state-' . $state;
 
-		$output = ( defined( 'DOING_AJAX' ) && DOING_AJAX ) ? '' : ' | ';
+		$output = ( $is_ajax_request ) ? '' : ' | ';
 		$output .= '<span class="p2-resolve-wrap"><a title="' . esc_attr( $title ) . '" href="' . esc_url( $link ) . '" class="' . esc_attr( implode( ' ', $css ) ) . '">' . esc_html( $text ) . '</a>';
 
-		// Hide our audit log output here too
 		$audit_logs = get_post_meta( $post_id, self::audit_log_key );
-		$audit_logs = array_reverse( $audit_logs, true );
 
-		$output .= '<ul class="p2-resolved-posts-audit-log">';
-		foreach( $audit_logs as $audit_log ) {
-			$output .= $this->single_audit_log_output( $audit_log );
+		if ( !empty( $audit_logs ) ) {
+			$audit_logs = array_reverse( $audit_logs, true );
+
+			$output .= '<ul class="p2-resolved-posts-audit-log">';
+			foreach( $audit_logs as $audit_log ) {
+				$output .= $this->single_audit_log_output( $audit_log );
+			}
+			$output .= '</ul>';
 		}
-		$output .= '</ul></span>';
 
-		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+		$output .= '</span>';
+
+		if ( $is_ajax_request ) {
 			header( 'Content-Type: application/json' );
 			die( json_encode( array( 'output' => $output, 'state' => $state ) ) );
 		} else {
