@@ -54,6 +54,7 @@ class P2_Resolved_Posts {
 			return;
 		}
 
+
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'wp_head', array( $this, 'action_wp_head_ajax' ) );
 		add_action( 'init', array( $this, 'action_init_handle_state_change' ) );
@@ -61,6 +62,7 @@ class P2_Resolved_Posts {
 		add_filter( 'post_class', array( $this, 'post_class' ), 10, 3 );
 		add_action( 'widgets_init', array( $this, 'widgets_init' ) );
 		add_filter( 'request', array( $this, 'request' ) );
+		add_action( 'p2_post_form', array( $this, 'post_form' ) );
 		add_action( 'comment_post', array( $this, 'comment_submit' ), 10, 2 );
 		add_action( 'wp_insert_post', array( $this, 'post_submit' ), 10, 2 );
 		add_action( 'wp_ajax_p2_resolved_posts_get_status', array( $this, 'p2_action_links' ) );
@@ -252,6 +254,20 @@ class P2_Resolved_Posts {
 		} else {
 			echo $output;
 		}
+	}
+
+	function post_form() {
+
+		if ( apply_filters( 'p2_resolved_posts_disable_mark_as_unresolved_checkbox', false ) )
+			return;
+
+		$mark_as_unresolved_checkbox = '<p class="p2_resolved_posts_mark_as_unresolved_checkbox">';
+		$mark_as_unresolved_checkbox .= '<input type="checkbox" name="p2_resolved_posts_mark_as_unresolved_checkbox" id="p2_resolved_posts_mark_as_unresolved_checkbox" value="unresolved"/> ';
+		$mark_as_unresolved_checkbox .= '<label class="p2_resolved_posts_mark_as_unresolved_label" id="p2_resolved_posts_mark_as_unresolved_label" for="p2_resolved_posts_mark_as_unresolved_checkbox">' . __( 'Mark as Unresolved', 'p2-resolve' ) . '</label>';
+		$mark_as_unresolved_checkbox .= '</p>';
+		echo apply_filters( 'p2_resolved_posts_mark_as_unresolved_checkbox', $mark_as_unresolved_checkbox );
+
+
 	}
 
 	/**
