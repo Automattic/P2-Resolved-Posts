@@ -721,5 +721,5 @@ class P2_Resolved_Posts {
 }
 
 $p2_resolved_posts = new P2_Resolved_Posts();
-include_once( dirname( __FILE__ ) . '/php/p2-resolved-posts-widget.php' );
-include_once( dirname( __FILE__ ) . '/php/p2_resolved-posts-show-unresolved-posts-widget.php' );
+include_once( dirname( __FILE__ ) . '/php/resolved-posts-links-widget.php' );
+include_once( dirname( __FILE__ ) . '/php/unresolved-posts-widget.php' );
