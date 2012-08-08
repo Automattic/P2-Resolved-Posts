@@ -17,6 +17,8 @@
 if ( defined('WP_CLI') && WP_CLI )
 	require_once( dirname( __FILE__ ) . '/php/class-wp-cli.php' );
 
+define( 'P2_RESOLVED_POSTS_VERSION', 0.2 );
+
 /**
  * @package P2_Resolved_Posts
  */
@@ -52,7 +54,7 @@ class P2_Resolved_Posts {
 			return;
 		}
 
-		add_action( 'wp_head', array( $this, 'action_wp_head_css' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'wp_head', array( $this, 'action_wp_head_ajax' ) );
 		add_action( 'init', array( $this, 'action_init_handle_state_change' ) );
 		add_action( 'p2_action_links', array( $this, 'p2_action_links' ), 100 );
@@ -343,106 +345,8 @@ class P2_Resolved_Posts {
 	}
 
 
-	/**
-	 * Give our resolve and unresolved items a bit of CSS
-	 */
-	function action_wp_head_css() {
-		?>
-		<style type="text/css">
-
-		#main #postlist li.post {
-			border-left: 8px solid #FFF;
-			padding-left: 7px;
-		}
-
-		#main #postlist li.post.state-unresolved {
-			border-left-color: #E6000A;
-			-webkit-border-top-left-radius: 0;
-			-moz-border-radius-topleft: 0;
-			-o-border-radius-topleft: 0;
-			-ms-border-radius-topleft: 0;
-			border-top-left-radius: 0;
-		}
-
-		#main #postlist li.post.state-unresolved .actions a.p2-resolve-link {
-			background-color: #E6000A;
-		}
-
-		#main #postlist li.post.state-resolved {
-			border-left-color: #009632;
-			-webkit-border-top-left-radius: 0;
-			-moz-border-radius-topleft: 0;
-			-o-border-radius-topleft: 0;
-			-ms-border-radius-topleft: 0;
-			border-top-left-radius: 0;
-		}
-
-		#main #postlist li.post.state-resolved .actions a.p2-resolve-link {
-			background-color: #009632;
-		}
-
-		#main #postlist li.post.state-unresolved .actions a.p2-resolve-link,
-		#main #postlist li.post.state-resolved .actions a.p2-resolve-link {
-			color: #fff;
-			padding: 1px 3px;
-			-webkit-border-radius: 2px;
-			-moz-border-radius: 2px;
-			-o-border-radius: 2px;
-			-ms-border-radius: 2px;
-			border-radius: 2px;
-		}
-
-		#main #postlist li.post .actions a.p2-resolve-link:hover,
-		#main #postlist li.post .actions a.p2-resolve-link.p2-resolve-ajax-action {
-			background-color: #888;
-		}
-
-		#main #postlist li.post ul.p2-resolved-posts-audit-log,
-		#main .controls ul.p2-resolved-posts-audit-log {
-			background-color: #FFFFFF;
-			padding-top: 3px;
-			padding-bottom: 3px;
-			padding-left: 10px;
-			padding-right: 10px;
-			position: absolute;
-			right: 0;
-			width: 225px;
-			z-index: 1000;
-			border: 1px solid #CCCCCC;
-			display: none;
-		}
-
-		#main #postlist li.post ul.p2-resolved-posts-audit-log li {
-			list-style-type: none;
-			color: #777;
-			opacity: 0.6;
-			border-top: none;
-			border-bottom: none;
-			padding-top: 2px;
-			padding-bottom: 2px;
-		}
-
-		#main #postlist li.post ul.p2-resolved-posts-audit-log li img {
-			float: left;
-			margin-right: 0;
-			margin-top: 4px;
-		}
-
-		#main #postlist li.post ul.p2-resolved-posts-audit-log li span.audit-log-text {
-			margin-left: 25px;
-			display: block;
-		}
-
-		#main #postlist li.post ul.p2-resolved-posts-audit-log li span.date-time {
-			font-size: 10px;
-		}
-
-		#main #postlist li.post ul.p2-resolved-posts-audit-log li:first-child {
-			opacity: 1.0;
-		}
-
-		</style>
-		<?
+	function enqueue() {
+		wp_enqueue_style( 'p2-resolved-posts', plugins_url( 'css/p2-resolved-posts.css', __FILE__ ), array(), P2_RESOLVED_POSTS_VERSION );
 	}
 
 	/**
