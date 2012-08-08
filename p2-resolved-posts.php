@@ -197,8 +197,8 @@ class P2_Resolved_Posts {
 
 		$is_ajax_request = ( defined( 'DOING_AJAX' ) && DOING_AJAX && !empty( $_REQUEST['action'] ) && 'p2_resolved_posts_get_status' == $_REQUEST['action'] );
 
-		if ( $is_ajax_request && !empty( $_REQUEST['post-id'] ) ) {
-			$post_id = $_REQUEST['post-id'];
+		if ( $is_ajax_request && !empty( $_REQUEST['post_id'] ) ) {
+			$post_id = $_REQUEST['post_id'];
 		} elseif ( is_object( $post ) && !empty( $post->ID ) ) {
 			$post_id = $post->ID;
 		} else {
@@ -207,7 +207,7 @@ class P2_Resolved_Posts {
 
 		$args = array(
 			'action' => 'p2-resolve',
-			'post-id' => $post_id,
+			'post_id' => $post_id,
 			'nonce' => wp_create_nonce( 'p2-resolve-' . $post_id ),
 		);
 		$link = add_query_arg( $args, get_site_url() );
@@ -530,7 +530,7 @@ class P2_Resolved_Posts {
 	function action_init_handle_state_change() {
 
 		// Bail if the action isn't ours
-		if ( !isset( $_GET['post-id'], $_GET['action'], $_GET['nonce'], $_GET['mark'] ) || $_GET['action'] != 'p2-resolve' )
+		if ( !isset( $_GET['post_id'], $_GET['action'], $_GET['nonce'], $_GET['mark'] ) || $_GET['action'] != 'p2-resolve' )
 			return;
 
 		$error = false;
@@ -548,7 +548,7 @@ class P2_Resolved_Posts {
 			$error = __( 'Bad state', 'p2-resolve' );
 
 		$error = false;
-		$post_id = intval( $_GET['post-id'] );
+		$post_id = intval( $_GET['post_id'] );
 
 		$post = get_post( $post_id );
 		if ( !$post )
