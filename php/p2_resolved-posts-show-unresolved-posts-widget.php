@@ -112,7 +112,7 @@
  		?>
 		<p><label for="<?php echo $this->get_field_id('title'); ?>"><?php _e( 'Title', 'p2-resolved-posts' ); ?>: <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" /></label></p>
 		<p><label for="<?php echo $this->get_field_id('posts_per_page'); ?>"><?php _e( 'Posts Per Page', 'p2-resolved-posts' ); ?>: <input class="widefat" id="<?php echo $this->get_field_id('posts_per_page'); ?>" name="<?php echo $this->get_field_name('posts_per_page'); ?>" type="text" value="<?php echo esc_attr( $posts_per_page ); ?>" maxlength="2" /></label></p>
-		<p><label for="<?php echo $this->get_field_id('filter_tags'); ?>"><?php _e( 'Filter to these tags', 'p2-resolved-posts' ); ?>: <input class="widefat" id="<?php echo $this->get_field_id('filter_tags'); ?>" name="<?php echo $this->get_field_name('filter_tags'); ?>" type="text" value="<?php echo esc_attr( $filter_tags ); ?>" /></label><br />
+		<p><label for="<?php echo $this->get_field_id('filter_tags'); ?>"><?php _e( 'Filter to these tags', 'p2-resolved-posts' ); ?>: <input class="widefat" id="<?php echo $this->get_field_id('filter_tags'); ?>" name="<?php echo $this->get_field_name('filter_tags'); ?>" type="text" value="<?php if ( !empty( $filter_tags ) ) echo esc_attr( $filter_tags ); ?>" /></label><br />
 			<span class="description"><?php _e( "Separate multiple tags with commas, and prefix with '-' to exclude.", 'p2-resolved-posts' ); ?></span>
 		</p>
 		<p><label for="<?php echo $this->get_field_id('order'); ?>"><?php _e( 'Show', 'p2-resolved-posts' ); ?>: <select id="<?php echo $this->get_field_id('order'); ?>" name="<?php echo $this->get_field_name('order'); ?>">
