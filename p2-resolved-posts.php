@@ -178,6 +178,8 @@ class P2_Resolved_Posts {
 	 * Sidebar widget for filtering posts
 	 */
 	function widgets_init() {
+		include_once( dirname( __FILE__ ) . '/php/resolved-posts-links-widget.php' );
+		include_once( dirname( __FILE__ ) . '/php/unresolved-posts-widget.php' );
 		register_widget( 'P2_Resolved_Posts_Widget' );
 		register_widget( 'P2_Resolved_Posts_Show_Unresolved_Posts_Widget' );
 	}
@@ -678,5 +680,3 @@ class P2_Resolved_Posts {
 }
 
 $p2_resolved_posts = new P2_Resolved_Posts();
-include_once( dirname( __FILE__ ) . '/php/resolved-posts-links-widget.php' );
-include_once( dirname( __FILE__ ) . '/php/unresolved-posts-widget.php' );
