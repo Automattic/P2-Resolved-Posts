@@ -32,9 +32,6 @@ class P2_Resolved_Posts {
 	const unresolved_keyword = '!unresolved';
 	const normal_keyword = '!normal';
 
-	/**
-	 * Constructor. Saves instance and sets up initial hook.
-	 */
 	function __construct() {
 		self::$instance = $this;
 
@@ -43,9 +40,6 @@ class P2_Resolved_Posts {
 		add_action( 'after_setup_theme', array( $this, 'after_setup_theme' ) );
 	}
 
-	/**
-	 * Sets up initial hooks, if the P2 theme is in play.
-	 */
 	function after_setup_theme() {
 
 		if ( ! class_exists( 'P2' ) ) {
@@ -60,9 +54,9 @@ class P2_Resolved_Posts {
 		add_filter( 'post_class', array( $this, 'post_class' ), 10, 3 );
 		add_action( 'widgets_init', array( $this, 'widgets_init' ) );
 		add_filter( 'request', array( $this, 'parse_request' ) );
-		add_action( 'comment_form', array( $this, 'comment_form' ) );
-		add_action( 'comment_post', array( $this, 'comment_submit' ), 10, 2 );
-		add_action( 'wp_insert_post', array( $this, 'post_submit' ), 1000, 2 );
+		add_action( 'comment_form', array( $this, 'comment_respond_checkbox' ) );
+		add_action( 'comment_post', array( $this, 'process_comment_submission' ), 10, 2 );
+		add_action( 'wp_insert_post', array( $this, 'process_post_submission' ), 1000, 2 );
 		add_action( 'wp_ajax_p2_resolve', array( $this, 'handle_state_change' ) );
 		add_action( 'wp_ajax_p2_resolve', array( $this, 'handle_state_change' ) );
 		add_action( 'wp_ajax_p2_resolved_posts_get_status', array( $this, 'p2_action_links' ) );
@@ -71,7 +65,6 @@ class P2_Resolved_Posts {
 		$this->register_taxonomy();
 		if ( ! term_exists( 'unresolved', self::taxonomy ) )
 			wp_insert_term( 'unresolved', self::taxonomy );
-
 
 		// Posts can be marked unresolved automatically by default if the user wishes
 		// otherwise a checkbox is presented
@@ -88,17 +81,11 @@ class P2_Resolved_Posts {
 
 	}
 
-	/**
-	 * Display an admin notice if the plugin is active but P2 isn't enabled
-	 */
 	function no_p2_admin_notice() {
 		$message = sprintf( __( "P2 Resolved Posts is enabled. You'll also need to activate the <a href='%s' target='_blank'>P2 theme</a> to start using the plugin.", 'p2-resolve' ), 'http://p2theme.com/' );
 		echo '<div class="error"><p>' . $message . '</p></div>';
 	}
 
-	/**
-	 * Register the taxonomy we're using for tracking threads
-	 */
 	function register_taxonomy() {
 		register_taxonomy( self::taxonomy, 'post', array(
 			'public' => true,
@@ -108,10 +95,6 @@ class P2_Resolved_Posts {
 		) );
 	}
 
-	/**
-	 * Parse the request if it's a request for our unresolved posts
-	 */
-	function request( $qvs ) {
 
 	function parse_request( $qvs ) {
 		if ( ! isset( $qvs['resolved'] ) )
@@ -190,9 +173,7 @@ class P2_Resolved_Posts {
 		return ( defined( 'DOING_AJAX' ) && DOING_AJAX && ! empty( $_REQUEST['action'] ) && false !== strpos( $_REQUEST['action'], 'p2_resolve' ) );
 	}
 
-	/**
-	 * Sidebar widget for filtering posts
-	 */
+
 	function widgets_init() {
 		include_once( dirname( __FILE__ ) . '/php/resolved-posts-links-widget.php' );
 		include_once( dirname( __FILE__ ) . '/php/unresolved-posts-widget.php' );
@@ -201,8 +182,8 @@ class P2_Resolved_Posts {
 	}
 
 	/**
-	 * Add our action links to the P2 post
-	 * also respond to ajax request to update the links
+	 * generate the links as needed for each post
+	 * responds to ajax requests
 	 */
 	function p2_action_links() {
 
@@ -286,10 +267,7 @@ class P2_Resolved_Posts {
 
 	}
 
-	/**
-	 * add checkbox to comment replies
-	 */
-	function comment_form( $comment_field ) {
+	function comment_respond_checkbox( $comment_field ) {
 		global $post;
 
 		if ( !has_term( 'unresolved', self::taxonomy, $post->ID ) || apply_filters( 'p2_resolved_posts_disable_mark_as_resolved_comment_checkbox', false ) )
@@ -303,11 +281,7 @@ class P2_Resolved_Posts {
 
 	}
 
-	/**
-	 * process a comment after it's inserted and adjust the
-	 * resolved state as needed
-	 */
-	function comment_submit( $comment_id, $approved ) {
+	function process_comment_submission( $comment_id, $approved ) {
 		if ( 'spam' == $approved )
 			return;
 
@@ -320,11 +294,7 @@ class P2_Resolved_Posts {
 		wp_update_comment( (array) $comment );
 	}
 
-	/**
-	 * process a post after it's inserted and adjust the
-	 * resolved state as needed
-	 */
-	function post_submit( $post_id, $post ) {
+	function process_post_submission( $post_id, $post ) {
 
 		if ( !is_object( $post ) || empty( $post->post_content ) )
 			return;
@@ -360,37 +330,24 @@ class P2_Resolved_Posts {
 		return $this->erase_keywords_from_string( $string );
 	}
 
-	/**
-	 * detect if a string contains any of the keywords
-	 */
+
 	function string_contains_state_keywords( $string ) {
 		return $this->string_contains_helper( $string, array( self::resolved_keyword, self::unresolved_keyword, self::normal_keyword ) );
 	}
 
-	/**
-	 * detect if a string contains the resolved keyword
-	 */
 	function string_contains_resolved_keyword( $string ) {
 		return $this->string_contains_helper( $string, self::resolved_keyword );
 	}
 
-	/**
-	 * detect if a string contains the unresolved keyword
-	 */
+
 	function string_contains_unresolved_keyword( $string ) {
 		return $this->string_contains_helper( $string, self::unresolved_keyword );
 	}
 
-	/**
-	 * detect if a string contains the normal keyword
-	 */
 	function string_contains_normal_keyword( $string ) {
 		return $this->string_contains_helper( $string, self::normal_keyword );
 	}
 
-	/**
-	 * helper function to detect if a string contains contains the specified keywords
-	 */
 	function string_contains_helper( $string, $keywords ) {
 
 		if ( !is_array( $keywords ) )
@@ -404,9 +361,6 @@ class P2_Resolved_Posts {
 		return false;
 	}
 
-	/**
-	 * helper function to erase keywords from a string
-	 */
 	function erase_keywords_from_string( $string, $keywords = null ) {
 
 		if ( empty( $keywords ) )
@@ -433,9 +387,6 @@ class P2_Resolved_Posts {
 	}
 
 
-	/**
-	 * Extra CSS to style the post when there are open threads
-	 */
 	function post_class( $classes, $class, $post_id ) {
 		if ( has_term( 'resolved', self::taxonomy, $post_id ) )
 			$classes[] = 'state-resolved';
@@ -445,9 +396,6 @@ class P2_Resolved_Posts {
 		return $classes;
 	}
 
-	/**
-	 * Handle changing the state between 'unresolved', 'resolved' and normal
-	 */
 	function handle_state_change() {
 
 		// bail if ajax and init
@@ -503,9 +451,6 @@ class P2_Resolved_Posts {
 
 	}
 
-	/**
-	 * Change the state of a given post
-	 */
 	function change_state( $post_id, $state, $inserting_post = false ) {
 		if ( ! taxonomy_exists( self::taxonomy ) )
 			$this->register_taxonomy();
@@ -522,12 +467,6 @@ class P2_Resolved_Posts {
 		}
 	}
 
-	/**
-	 * Log when a post has changed resolution state.
-	 * Don't blow away existing logs though.
-	 *
-	 * @since 0.2
-	 */
 	function log_state_change( $post_id, $args = array() ) {
 
 		$defaults = array(
@@ -540,11 +479,6 @@ class P2_Resolved_Posts {
 		return $args;
 	}
 
-	/**
-	 * Produce the HTML for a single audit log
-	 *
-	 * @since 0.2
-	 */
 	function single_audit_log_output( $args ) {
 
 		$date = get_date_from_gmt( date( 'Y-m-d H:i:s', $args['timestamp'] ), get_option( 'date_format' ) );
