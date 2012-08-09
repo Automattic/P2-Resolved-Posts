@@ -54,16 +54,16 @@ class P2_Resolved_Posts {
 			return;
 		}
 
-
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
-		add_action( 'wp_head', array( $this, 'action_wp_head_ajax' ) );
-		add_action( 'init', array( $this, 'action_init_handle_state_change' ) );
+		add_action( 'init', array( $this, 'handle_state_change' ) );
 		add_action( 'p2_action_links', array( $this, 'p2_action_links' ), 100 );
 		add_filter( 'post_class', array( $this, 'post_class' ), 10, 3 );
 		add_action( 'widgets_init', array( $this, 'widgets_init' ) );
 		add_filter( 'request', array( $this, 'request' ) );
 		add_action( 'comment_post', array( $this, 'comment_submit' ), 10, 2 );
 		add_action( 'wp_insert_post', array( $this, 'post_submit' ), 10, 2 );
+		add_action( 'wp_ajax_p2_resolve', array( $this, 'handle_state_change' ) );
+		add_action( 'wp_ajax_p2_resolve', array( $this, 'handle_state_change' ) );
 		add_action( 'wp_ajax_p2_resolved_posts_get_status', array( $this, 'p2_action_links' ) );
 		add_action( 'wp_ajax_no_priv_p2_resolved_posts_get_status', array( $this, 'p2_action_links' ) );
 
@@ -199,9 +199,7 @@ class P2_Resolved_Posts {
 
 		global $post;
 
-		$is_ajax_request = ( defined( 'DOING_AJAX' ) && DOING_AJAX && !empty( $_REQUEST['action'] ) && 'p2_resolved_posts_get_status' == $_REQUEST['action'] );
-
-		if ( $is_ajax_request && !empty( $_REQUEST['post_id'] ) ) {
+		if ( $this->is_ajax_request() && !empty( $_REQUEST['post_id'] ) ) {
 			$post_id = $_REQUEST['post_id'];
 		} elseif ( is_object( $post ) && !empty( $post->ID ) ) {
 			$post_id = $post->ID;
@@ -210,7 +208,7 @@ class P2_Resolved_Posts {
 		}
 
 		$args = array(
-			'action' => 'p2-resolve',
+			'action' => 'p2_resolve',
 			'post_id' => $post_id,
 			'nonce' => wp_create_nonce( 'p2-resolve-' . $post_id ),
 		);
@@ -240,28 +238,28 @@ class P2_Resolved_Posts {
 		if ( !empty( $state ) )
 			$css[] = 'state-' . $state;
 
-		$output = ( $is_ajax_request ) ? '' : ' | ';
-		$output .= '<span class="p2-resolve-wrap"><a title="' . esc_attr( $title ) . '" href="' . esc_url( $link ) . '" class="' . esc_attr( implode( ' ', $css ) ) . '">' . esc_html( $text ) . '</a>';
+		$action_links = ( $this->is_ajax_request() ) ? '' : ' | ';
+		$action_links .= '<span class="p2-resolve-wrap"><a title="' . esc_attr( $title ) . '" href="' . esc_url( $link ) . '" class="' . esc_attr( implode( ' ', $css ) ) . '">' . esc_html( $text ) . '</a>';
 
 		$audit_logs = get_post_meta( $post_id, self::audit_log_key );
 
 		if ( !empty( $audit_logs ) ) {
 			$audit_logs = array_reverse( $audit_logs, true );
 
-			$output .= '<ul class="p2-resolved-posts-audit-log">';
+			$action_links .= '<ul class="p2-resolved-posts-audit-log">';
 			foreach( $audit_logs as $audit_log ) {
-				$output .= $this->single_audit_log_output( $audit_log );
+				$action_links .= $this->single_audit_log_output( $audit_log );
 			}
-			$output .= '</ul>';
+			$action_links .= '</ul>';
 		}
 
-		$output .= '</span>';
+		$action_links .= '</span>';
 
-		if ( $is_ajax_request ) {
+		if ( $this->is_ajax_request() ) {
 			header( 'Content-Type: application/json' );
-			die( json_encode( array( 'output' => $output, 'state' => $state ) ) );
+			die( json_encode( array( 'action_links' => $action_links, 'state' => $state ) ) );
 		} else {
-			echo $output;
+			echo $action_links;
 		}
 	}
 
@@ -391,130 +389,14 @@ class P2_Resolved_Posts {
 
 
 	function enqueue() {
+		wp_enqueue_script( 'p2-resolved-posts', plugins_url( 'js/p2-resolved-posts.js', __FILE__ ), array( 'jquery' ), P2_RESOLVED_POSTS_VERSION );
+
+		$ajax_polling_url = add_query_arg( array( 'action' => 'p2_resolved_posts_get_status' ), wp_nonce_url( admin_url( 'admin-ajax.php' ), 'p2_resolved_posts_get_status' ) );
+		wp_localize_script( 'p2-resolved-posts', 'p2rp', array( 'ajaxPollingUrl' => $ajax_polling_url, 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
+
 		wp_enqueue_style( 'p2-resolved-posts', plugins_url( 'css/p2-resolved-posts.css', __FILE__ ), array(), P2_RESOLVED_POSTS_VERSION );
 	}
 
-	/**
-	 * Javascript to make this whole operation run like AJAX
-	 */
-	function action_wp_head_ajax() {
-		?>
-		<script type="text/javascript">
-
-		jQuery(document).ready(function(){
-
-			var p2_resolved_hover_in = null;
-			var p2_resolved_hover_out = null;
-
-			// Display the most recent audit log for each post
-			jQuery('#main #postlist li.post .p2-resolved-posts-audit-log').each( function() {
-				jQuery('li', this).last().show();
-			});
-
-			jQuery('.actions .p2-resolve-wrap').hover(
-				function(){
-					clearTimeout( p2_resolved_hover_out );
-					var audit_log = jQuery(this).find('.p2-resolved-posts-audit-log');
-					if ( audit_log.find('li').length ) {
-						p2_resolved_hover_in = setTimeout( function() {
-							audit_log.fadeIn();
-						}, 1250 );
-					}
-				},
-				function(){
-					clearTimeout( p2_resolved_hover_in );
-					var audit_log = jQuery(this).find('.p2-resolved-posts-audit-log');
-					p2_resolved_hover_out = setTimeout( function() {
-							audit_log.fadeOut();
-						}, 500 );
-				}
-			);
-
-
-			jQuery('#wrapper').ajaxComplete(function(e, xhr, options){
-				if ( 'undefined' === typeof(options.data) )
-					return;
-
-				var query_string = options.data;
-				var query_vars = {};
-				query_string.replace(
-					new RegExp("([^?=&]+)(=([^&]*))?", "g"),
-    			function($0, $1, $2, $3) { query_vars[$1] = $3; }
-    		);
-
-        if ( 'undefined' === typeof( query_vars.comment_post_ID ) )
-        	return;
-
-      	var post_id = query_vars.comment_post_ID;
-
-      	jQuery.ajax({
-					type: 'GET',
-					url: '<?php echo $this->get_polling_ajax_uri(); ?>' + '&post-id=' + parseInt(post_id),
-					success: function( response ) {
-						$the_post = jQuery( '.post-' + post_id );
-						$the_post.removeClass( 'state-resolved', 'state-unresolved' );
-						if ( '' != response.state )
-							$the_post.addClass( 'state-' + response.state );
-
-						jQuery( '.post-' + post_id + ' .p2-resolve-wrap ').replaceWith( response.output );
-					}
-				});
-
-			});
-
-			jQuery('.actions .p2-resolve-link').click(function(){
-				var original_link = jQuery(this);
-				// Mark the thread as unresolved
-				jQuery(this).html('Saving...');
-				jQuery(this).addClass('p2-resolve-ajax-action');
-				jQuery.get( original_link.attr('href') + '&ajax', function(data){
-					// The update was successful
-					if ( data.indexOf('<') == 0 ) {
-						// Depending on the action we took, update the DOM
-						// Need to replace the text, href and the title attribute
-						if ( original_link.attr('href').indexOf('mark=unresolved') != -1 ) {
-							original_link.closest('.post').addClass('state-unresolved');
-							original_link.addClass('state-unresolved');
-							var new_url = original_link.attr('href').replace('mark=unresolved', 'mark=resolved');
-							original_link.attr('href', new_url );
-							original_link.html('<?php _e("Unresolved","p2-resolve"); ?>');
-							original_link.attr('title','<?php _e("Flag as Resolved","p2-resolve"); ?>');
-						} else if ( original_link.attr('href').indexOf('mark=resolved') != -1 ) {
-							original_link.closest('.post').removeClass('state-unresolved').addClass('state-resolved');
-							original_link.removeClass('state-unresolved').addClass('state-resolved');
-							var new_url = original_link.attr('href').replace('mark=resolved', 'mark=normal');
-							original_link.attr('href', new_url );
-							original_link.html('<?php _e("Resolved","p2-resolve"); ?>');
-							original_link.attr('title','<?php _e("Remove Resolved Flag","p2-resolve"); ?>');
-						} else if ( original_link.attr('href').indexOf('mark=normal') != -1 ) {
-							original_link.closest('.post').removeClass('state-resolved');
-							original_link.removeClass('state-resolved');
-							var new_url = original_link.attr('href').replace('mark=normal', 'mark=unresolved');
-							original_link.attr('href', new_url );
-							original_link.html('<?php _e("Flag Unresolved","p2-resolve"); ?>');
-							original_link.attr('title','<?php _e("Flag as Unresolved","p2-resolve"); ?>');
-						}
-						// Update the audit log
-						original_link.closest('.post').find('ul.p2-resolved-posts-audit-log').prepend( data );
-
-					} else {
-						// Display the error if it happened
-						original_link.html(data);
-						original_link.attr('style', 'color: #FF0000 !important;');
-					}
-					original_link.removeClass('p2-resolve-ajax-action');
-					return false;
-				});
-				return false;
-			});
-		});
-		</script>
-		<?
-	}
-
-	function get_polling_ajax_uri() {
-		return add_query_arg( array( 'action' => 'p2_resolved_posts_get_status' ), wp_nonce_url( admin_url( 'admin-ajax.php' ), 'p2_resolved_posts_get_status' ) );
-	}
 
 	/**
 	 * Extra CSS to style the post when there are open threads
@@ -531,10 +413,14 @@ class P2_Resolved_Posts {
 	/**
 	 * Handle changing the state between 'unresolved', 'resolved' and normal
 	 */
-	function action_init_handle_state_change() {
+	function handle_state_change() {
+
+		// bail if ajax and init
+		if ( 'init' == current_filter() && $this->is_ajax_request() )
+			return;
 
 		// Bail if the action isn't ours
-		if ( !isset( $_GET['post_id'], $_GET['action'], $_GET['nonce'], $_GET['mark'] ) || $_GET['action'] != 'p2-resolve' )
+		if ( !isset( $_GET['post_id'], $_GET['action'], $_GET['nonce'], $_GET['mark'] ) || $_GET['action'] != 'p2_resolve' )
 			return;
 
 		$error = false;
@@ -561,19 +447,20 @@ class P2_Resolved_Posts {
 		if ( !wp_verify_nonce( $_GET['nonce'], 'p2-resolve-' . $post_id ) )
 			$error = __( "Nonce error", 'p2-resolve' );
 
-		// If there were no errors, set the post in that state
-		if ( !$error ) {
+		if ( empty( $error ) ) {
 			if ( $state == 'normal' )
 				$state = '';
-			$message = $this->change_state( $post_id, $state );
+			$this->change_state( $post_id, $state );
+			$response = $this->p2_action_links();
 			clean_object_term_cache( $post->ID, $post->post_type );
 		} else {
-			$message = $error;
+			$response['state'] = 'error';
+			$response['action_links'] = $error;
 		}
 
-		// Echo data if this was an AJAX request, otherwise go to the post
-		if ( isset( $_GET['ajax'] ) ) {
-			echo $message;
+		if ( $this->is_ajax_request() ) {
+			header( 'Content-Type: application/json' );
+			die( json_encode( array( 'action_links' => $action_links, 'state' => $state ) ) );
 		} else {
 			wp_safe_redirect( get_permalink( $post->ID ) );
 		}
