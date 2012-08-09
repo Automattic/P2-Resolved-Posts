@@ -50,7 +50,7 @@ class P2_Resolved_Posts {
 
 		if ( ! class_exists( 'P2' ) ) {
 			// Don't run the plugin if P2 isn't active, but display an admin notice
-			add_action( 'admin_notices', array( $this, 'action_admin_notices' ) );
+			add_action( 'admin_notices', array( $this, 'no_p2_admin_notice' ) );
 			return;
 		}
 
@@ -91,7 +91,7 @@ class P2_Resolved_Posts {
 	/**
 	 * Display an admin notice if the plugin is active but P2 isn't enabled
 	 */
-	function action_admin_notices() {
+	function no_p2_admin_notice() {
 		$message = sprintf( __( "P2 Resolved Posts is enabled. You'll also need to activate the <a href='%s' target='_blank'>P2 theme</a> to start using the plugin.", 'p2-resolve' ), 'http://p2theme.com/' );
 		echo '<div class="error"><p>' . $message . '</p></div>';
 	}
