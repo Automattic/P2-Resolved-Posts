@@ -318,10 +318,19 @@ class P2_Resolved_Posts {
 	 */
 	function post_submit( $post_id, $post ) {
 
-		if ( ! $this->string_contains_state_keywords( $post->post_content ) )
+		if ( !is_object( $post ) || empty( $post->post_content ) )
 			return;
 
+		if ( ! $this->string_contains_state_keywords( $post->post_content ) || ! defined( 'DOING_AJAX' ) || ! DOING_AJAX )
+			return;
+
+		remove_action( 'wp_insert_post', array( $this, 'post_submit' ) ); // prevent this function from looping
+
 		$post->post_content = $this->process_string_post_resolved_state( $post->post_content, $post_id );
+		$post->post_title = p2_title_from_content( $post->post_content );
+		$post->post_name = p2_title_from_content( $post->post_content );
+		$post->post_modified = current_time( 'mysql' );
+		$post->post_modified_gmt = current_time( 'mysql', 1 );
 		wp_update_post( $post );
 	}
 
@@ -500,7 +509,6 @@ class P2_Resolved_Posts {
 		$args = $this->log_state_change( $post_id, $args );
 		do_action( 'p2_resolved_posts_changed_state', $state, $post_id, $inserting_post );
 
-		return $this->single_audit_log_output( $args );
 		if ( ! $inserting_post ) {
 			return $this->single_audit_log_output( $args );
 		}
