@@ -60,6 +60,7 @@ class P2_Resolved_Posts {
 		add_filter( 'post_class', array( $this, 'post_class' ), 10, 3 );
 		add_action( 'widgets_init', array( $this, 'widgets_init' ) );
 		add_filter( 'request', array( $this, 'request' ) );
+		add_action( 'comment_form', array( $this, 'comment_form' ) );
 		add_action( 'comment_post', array( $this, 'comment_submit' ), 10, 2 );
 		add_action( 'wp_insert_post', array( $this, 'post_submit' ), 10, 2 );
 		add_action( 'wp_ajax_p2_resolve', array( $this, 'handle_state_change' ) );
@@ -274,6 +275,23 @@ class P2_Resolved_Posts {
 		$mark_as_unresolved_checkbox .= '</p>';
 		echo apply_filters( 'p2_resolved_posts_mark_as_unresolved_checkbox', $mark_as_unresolved_checkbox );
 
+
+	}
+
+	/**
+	 * add checkbox to comment replies
+	 */
+	function comment_form( $comment_field ) {
+		global $post;
+
+		if ( !has_term( 'unresolved', self::taxonomy, $post->ID ) || apply_filters( 'p2_resolved_posts_disable_mark_as_resolved_comment_checkbox', false ) )
+			return;
+
+		$mark_as_resolved_checkbox = '<p class="p2_resolved_posts_mark_as_resolved_checkbox">';
+		$mark_as_resolved_checkbox .= '<input type="checkbox" name="p2_resolved_posts_mark_as_resolved" id="p2_resolved_posts_mark_as_resolved" value="resolved"/> ';
+		$mark_as_resolved_checkbox .= '<label class="p2_resolved_posts_mark_as_resolved_label" id="p2_resolved_posts_mark_as_resolved_label" for="p2_resolved_posts_mark_as_resolved">' . __( 'Mark as Resolved', 'p2-resolve' ) . '</label>';
+		$mark_as_resolved_checkbox .= '</p>';
+		echo apply_filters( 'p2_resolved_posts_mark_as_resolved_comment_checkbox', $mark_as_resolved_checkbox );
 
 	}
 

@@ -14,15 +14,14 @@ jQuery(document).ready(function($){
 	}
 
 	p2_resolved_ajax_update_post_state = function( post_id ) {
-		$.get( p2rp.ajaxPollingUrl + '&post-id=' + parseInt( post_id ), function( response ) {
-			p2_resolved_update_post_state_ui( post_id, reponse.state, response.action_links );
+		$.get( p2rp.ajaxPollingUrl + '&post_id=' + parseInt( post_id ), function( response ) {
+			p2_resolved_update_post_state_ui( post_id, response.state, response.action_links );
 		});
 	}
 
 	p2_resolved_update_post_state_ui = function( post_id, state, action_links ) {
 		$the_post = $( '.post-' + post_id );
 		$the_post.removeClass( 'state-resolved state-unresolved' );
-		console.log( state );
 		if ( '' != state )
 			$the_post.addClass( 'state-' + state );
 		$( '.post-' + post_id + ' .p2-resolve-wrap ').replaceWith( action_links );
@@ -96,6 +95,16 @@ jQuery(document).ready(function($){
 		});
 
 		return false;
+	});
+
+	/**
+	 * detect the mark as resolved checkbox and insert the special keyword
+	 */
+	$( '#commentform' ).bind( 'submit', function(trigger) {
+		if ( ! $( '#p2_resolved_posts_mark_as_resolved' ).prop( 'checked' ) )
+			return;
+
+		$('#comment').val( $('#comment').val() + '!resolved' );
 	});
 
 
