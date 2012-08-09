@@ -4,7 +4,7 @@
  * Author: Daniel Bachhuber (and Andrew Nacin)
  * Author URI: http://danielbachhuber.com/
  * Contributors: Hugo Baeta (css), Joey Kudish
- * Version: 0.2
+ * Version: 0.3
  */
 
 /**
@@ -17,7 +17,7 @@
 if ( defined('WP_CLI') && WP_CLI )
 	require_once( dirname( __FILE__ ) . '/php/class-wp-cli.php' );
 
-define( 'P2_RESOLVED_POSTS_VERSION', 0.2 );
+define( 'P2_RESOLVED_POSTS_VERSION', 0.3 );
 
 /**
  * @package P2_Resolved_Posts
