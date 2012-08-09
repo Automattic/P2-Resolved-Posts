@@ -59,7 +59,7 @@ class P2_Resolved_Posts {
 		add_action( 'p2_action_links', array( $this, 'p2_action_links' ), 100 );
 		add_filter( 'post_class', array( $this, 'post_class' ), 10, 3 );
 		add_action( 'widgets_init', array( $this, 'widgets_init' ) );
-		add_filter( 'request', array( $this, 'request' ) );
+		add_filter( 'request', array( $this, 'parse_request' ) );
 		add_action( 'comment_form', array( $this, 'comment_form' ) );
 		add_action( 'comment_post', array( $this, 'comment_submit' ), 10, 2 );
 		add_action( 'wp_insert_post', array( $this, 'post_submit' ), 1000, 2 );
@@ -112,6 +112,8 @@ class P2_Resolved_Posts {
 	 * Parse the request if it's a request for our unresolved posts
 	 */
 	function request( $qvs ) {
+
+	function parse_request( $qvs ) {
 		if ( ! isset( $qvs['resolved'] ) )
 			return $qvs;
 
@@ -140,24 +142,30 @@ class P2_Resolved_Posts {
 			'operator' => 'IN',
 		);
 		if ( isset( $_GET['tags'] ) || isset( $_GET['post_tag'] ) ) {
-				$filter_tags = ( isset( $_GET['tags'] ) ) ? $_GET['tags'] : $_GET['post_tag'];
-			$filter_tags = (array)explode( ',', $filter_tags );
-	 		foreach( (array)$filter_tags as $filter_tag ) {
+			$filter_tags = ( isset( $_GET['tags'] ) ) ? $_GET['tags'] : $_GET['post_tag'];
+			$filter_tags = (array) explode( ',', $filter_tags );
+
+	 		foreach( (array) $filter_tags as $filter_tag ) {
 	 			$filter_tag = sanitize_key( $filter_tag );
 	 			$new_tax_query = array(
 						'taxonomy' => 'post_tag',
 					);
+
 	 			if ( 0 === strpos( $filter_tag, '-') )
 					$new_tax_query['operator'] = 'NOT IN';
+
 				$filter_tag = trim( $filter_tag, '-' );
+
 				if ( is_numeric( $filter_tag ) )
 					$new_tax_query['field'] = 'ID';
 				else
 					$new_tax_query['field'] = 'slug';
+
 				$new_tax_query['terms'] = $filter_tag;
 	 			$qvs['tax_query'][] = $new_tax_query;
 	 		}
 	 	}
+
 	 	if ( isset( $_GET['order'] ) && in_array( strtolower( $_GET['order'] ), array( 'asc', 'desc' ) ) )
 	 		$qvs['order'] = sanitize_key( $_GET['order'] );
 
