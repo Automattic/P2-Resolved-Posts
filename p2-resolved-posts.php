@@ -598,7 +598,7 @@ class P2_Resolved_Posts {
 		$the_post = get_post( $post_id );
 		if ( 'resolved' == $state )
 			$the_post->comment_status = 'closed';
-		else
+		elseif ( 'closed' != get_option('default_comment_status') )
 			$the_post->comment_status = 'open';
 		wp_update_post( $the_post );
 
