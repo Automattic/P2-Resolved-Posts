@@ -84,7 +84,7 @@ class P2_Resolved_Posts {
 		// Comments can be closed automatically when a post is resolved
 		// if the user wishes
 		if ( apply_filters( 'p2_resolved_posts_open_close_comments', false ) )
-			add_action( 'p2_resolved_posts_changed_state', array( $this, 'open_close_comments' ), 10, 2 );
+			add_action( 'p2_resolved_posts_changed_state', array( $this, 'open_close_comments' ), 10, 3 );
 
 	}
 
@@ -331,13 +331,13 @@ class P2_Resolved_Posts {
 	 */
 	function process_string_post_resolved_state( $string, $post_id ) {
 		if ( $this->string_contains_resolved_keyword( $string ) )
-			$this->change_state( $post_id, 'resolved' );
+			$this->change_state( $post_id, 'resolved', true );
 
 		if ( $this->string_contains_unresolved_keyword( $string ) )
-			$this->change_state( $post_id, 'unresolved' );
+			$this->change_state( $post_id, 'unresolved', true );
 
 		if ( $this->string_contains_normal_keyword( $string ) )
-			$this->change_state( $post_id, 'normal' );
+			$this->change_state( $post_id, 'normal', true );
 
 		clean_object_term_cache( $post_id, get_post_type( $post_id ) );
 		return $this->erase_keywords_from_string( $string );
@@ -489,7 +489,7 @@ class P2_Resolved_Posts {
 	/**
 	 * Change the state of a given post
 	 */
-	function change_state( $post_id, $state ) {
+	function change_state( $post_id, $state, $inserting_post = false ) {
 		if ( ! taxonomy_exists( self::taxonomy ) )
 			$this->register_taxonomy();
 
@@ -498,9 +498,12 @@ class P2_Resolved_Posts {
 				'new_state' => $state,
 			);
 		$args = $this->log_state_change( $post_id, $args );
-		do_action( 'p2_resolved_posts_changed_state', $state, $post_id );
+		do_action( 'p2_resolved_posts_changed_state', $state, $post_id, $inserting_post );
 
 		return $this->single_audit_log_output( $args );
+		if ( ! $inserting_post ) {
+			return $this->single_audit_log_output( $args );
+		}
 	}
 
 	/**
@@ -579,7 +582,11 @@ class P2_Resolved_Posts {
 	 *
 	 * @since 0.3
 	 */
-	function open_close_comments( $state, $post_id ) {
+	function open_close_comments( $state, $post_id, $inserting_post ) {
+
+		if ( $inserting_post )
+			return;
+
 		$the_post = get_post( $post_id );
 		if ( 'resolved' == $state )
 			$the_post->comment_status = 'closed';
