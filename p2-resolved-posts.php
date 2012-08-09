@@ -177,6 +177,10 @@ class P2_Resolved_Posts {
 		return get_home_template();
 	}
 
+	function is_ajax_request() {
+		return ( defined( 'DOING_AJAX' ) && DOING_AJAX && ! empty( $_REQUEST['action'] ) && false !== strpos( $_REQUEST['action'], 'p2_resolve' ) );
+	}
+
 	/**
 	 * Sidebar widget for filtering posts
 	 */
