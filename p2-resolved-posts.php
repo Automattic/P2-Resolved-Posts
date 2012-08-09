@@ -81,104 +81,50 @@ class P2_Resolved_Posts {
 
 	}
 
+	/**
+	 * Automatically mark a newly published post as unresolved
+	 * To enable, include the following in your theme's functions.php:
+	 * - add_filter( 'p2_resolved_posts_mark_new_as_unresolved', '__return_true' );
+	 *
+	 * @since 0.2
+	 */
+	function mark_new_as_unresolved( $post_id, $post ) {
+
+		// Allow certain types of posts to not be marked as unresolved
+		if ( !apply_filters( 'p2_resolved_posts_maybe_mark_new_as_unresolved', true, $post ) )
+			return;
+
+		wp_set_post_terms( $post_id, array( 'unresolved' ), self::taxonomy );
+		$args = array(
+					'new_state' => 'unresolved',
+				);
+		$this->log_state_change( $post_id, $args );
+	}
+
+	/**
+	 * Automatically close comments on resolved posts
+	 * To enable, include the following in your theme's functions.php:
+	 * - add_filter( 'p2_resolved_posts_open_close_comments', '__return_true' );
+	 *
+	 * @since 0.3
+	 */
+	function open_close_comments( $state, $post_id, $inserting_post ) {
+
+		if ( $inserting_post )
+			return;
+
+		$the_post = get_post( $post_id );
+		if ( 'resolved' == $state )
+			$the_post->comment_status = 'closed';
+		elseif ( 'closed' != get_option('default_comment_status') )
+			$the_post->comment_status = 'open';
+		wp_update_post( $the_post );
+
+	}
+
 	function no_p2_admin_notice() {
 		$message = sprintf( __( "P2 Resolved Posts is enabled. You'll also need to activate the <a href='%s' target='_blank'>P2 theme</a> to start using the plugin.", 'p2-resolve' ), 'http://p2theme.com/' );
 		echo '<div class="error"><p>' . $message . '</p></div>';
-	}
-
-	function register_taxonomy() {
-		register_taxonomy( self::taxonomy, 'post', array(
-			'public' => true,
-			'query_var' => 'resolved',
-			'rewrite' => false,
-			'show_ui' => false,
-		) );
-	}
-
-
-	function parse_request( $qvs ) {
-		if ( ! isset( $qvs['resolved'] ) )
-			return $qvs;
-
-		if ( ! in_array( $qvs['resolved'], array( 'resolved', 'unresolved' ) ) ) {
-			unset( $qvs['resolved'] );
-			return $qvs;
-		}
-
-		// Just to be safe
-		$qvs['resolved'] = sanitize_key( $qvs['resolved'] );
-
-		add_action( 'parse_query', array( $this, 'parse_query' ) );
-		add_filter( 'template_include', array( $this, 'force_home_template' ) );
-
-		if ( ! isset( $qvs['tax_query'] ) )
-			$qvs['tax_query'] = array();
-
-		// Don't pay attention to sticky posts
-		$qvs['ignore_sticky_posts'] = 1;
-
-		// Filter the query to just the type of posts we're looking for
-		$qvs['tax_query'][] = array(
-			'taxonomy' => self::taxonomy,
-			'terms' => array( $qvs['resolved'] ),
-			'field' => 'slug',
-			'operator' => 'IN',
-		);
-		if ( isset( $_GET['tags'] ) || isset( $_GET['post_tag'] ) ) {
-			$filter_tags = ( isset( $_GET['tags'] ) ) ? $_GET['tags'] : $_GET['post_tag'];
-			$filter_tags = (array) explode( ',', $filter_tags );
-
-	 		foreach( (array) $filter_tags as $filter_tag ) {
-	 			$filter_tag = sanitize_key( $filter_tag );
-	 			$new_tax_query = array(
-						'taxonomy' => 'post_tag',
-					);
-
-	 			if ( 0 === strpos( $filter_tag, '-') )
-					$new_tax_query['operator'] = 'NOT IN';
-
-				$filter_tag = trim( $filter_tag, '-' );
-
-				if ( is_numeric( $filter_tag ) )
-					$new_tax_query['field'] = 'ID';
-				else
-					$new_tax_query['field'] = 'slug';
-
-				$new_tax_query['terms'] = $filter_tag;
-	 			$qvs['tax_query'][] = $new_tax_query;
-	 		}
-	 	}
-
-	 	if ( isset( $_GET['order'] ) && in_array( strtolower( $_GET['order'] ), array( 'asc', 'desc' ) ) )
-	 		$qvs['order'] = sanitize_key( $_GET['order'] );
-
-		return $qvs;
-	}
-
-	/**
-	 * Nacin thought this was important
-	 */
-	function parse_query( $query ) {
-		$query->is_home = true; // Force home detection.
-	}
-
-	/**
-	 * Nacin thought this was important
-	 */
-	function force_home_template() {
-		return get_home_template();
-	}
-
-	function is_ajax_request() {
-		return ( defined( 'DOING_AJAX' ) && DOING_AJAX && ! empty( $_REQUEST['action'] ) && false !== strpos( $_REQUEST['action'], 'p2_resolve' ) );
-	}
-
-
-	function widgets_init() {
-		include_once( dirname( __FILE__ ) . '/php/resolved-posts-links-widget.php' );
-		include_once( dirname( __FILE__ ) . '/php/unresolved-posts-widget.php' );
-		register_widget( 'P2_Resolved_Posts_Widget' );
-		register_widget( 'P2_Resolved_Posts_Show_Unresolved_Posts_Widget' );
 	}
 
 	/**
@@ -252,6 +198,147 @@ class P2_Resolved_Posts {
 			echo $action_links;
 		}
 	}
+
+	function handle_state_change() {
+
+		// bail if ajax and init
+		if ( 'init' == current_filter() && $this->is_ajax_request() )
+			return;
+
+		// Bail if the action isn't ours
+		if ( !isset( $_GET['post_id'], $_GET['action'], $_GET['nonce'], $_GET['mark'] ) || $_GET['action'] != 'p2_resolve' )
+			return;
+
+		$error = false;
+		$current_user = wp_get_current_user();
+
+		$states = array(
+			'resolved',
+			'unresolved',
+			'normal',
+		);
+		$state = '';
+		if ( in_array( $_GET['mark'], $states ) )
+			$state = sanitize_key( $_GET['mark'] );
+		else
+			$error = __( 'Bad state', 'p2-resolve' );
+
+		$error = false;
+		$post_id = intval( $_GET['post_id'] );
+
+		$post = get_post( $post_id );
+		if ( !$post )
+			$error = __( 'Invalid post', 'p2-resolve' );
+
+		if ( !wp_verify_nonce( $_GET['nonce'], 'p2-resolve-' . $post_id ) )
+			$error = __( "Nonce error", 'p2-resolve' );
+
+		if ( empty( $error ) ) {
+			if ( $state == 'normal' )
+				$state = '';
+			$this->change_state( $post_id, $state );
+			$response = $this->p2_action_links();
+			clean_object_term_cache( $post->ID, $post->post_type );
+		} else {
+			$response['state'] = 'error';
+			$response['action_links'] = $error;
+		}
+
+		if ( $this->is_ajax_request() ) {
+			header( 'Content-Type: application/json' );
+			die( json_encode( array( 'action_links' => $action_links, 'state' => $state ) ) );
+		} else {
+			wp_safe_redirect( get_permalink( $post->ID ) );
+		}
+		die;
+
+	}
+
+	function change_state( $post_id, $state, $inserting_post = false ) {
+		if ( ! taxonomy_exists( self::taxonomy ) )
+			$this->register_taxonomy();
+
+		wp_set_object_terms( $post_id, (array)$state, self::taxonomy, false );
+		$args = array(
+				'new_state' => $state,
+			);
+		$args = $this->log_state_change( $post_id, $args );
+		do_action( 'p2_resolved_posts_changed_state', $state, $post_id, $inserting_post );
+
+		if ( ! $inserting_post ) {
+			return $this->single_audit_log_output( $args );
+		}
+	}
+
+	function log_state_change( $post_id, $args = array() ) {
+
+		$defaults = array(
+				'user_login' => wp_get_current_user()->user_login,
+				'new_state' => '',
+				'timestamp' => time(),
+			);
+		$args = array_merge( $defaults, $args );
+		add_post_meta( $post_id, self::audit_log_key, $args );
+		return $args;
+	}
+
+	function single_audit_log_output( $args ) {
+
+		$date = get_date_from_gmt( date( 'Y-m-d H:i:s', $args['timestamp'] ), get_option( 'date_format' ) );
+		$time = get_date_from_gmt( date( 'Y-m-d H:i:s', $args['timestamp'] ), get_option( 'time_format' ) );
+		$date_time = sprintf( __( '<span class="date-time">%1$s on %2$s</span>', 'p2-resolve' ), esc_html( $time ), esc_html( $date ) );
+
+		$user = get_user_by( 'login', $args['user_login'] );
+		// Accomodate for removed users
+		if ( $user ) {
+			$avatar = get_avatar( $user->ID, 16 );
+			$display_name = $user->display_name;
+		} else {
+			$avatar = '';
+			$display_name = __( 'Someone', 'p2-resolve' );
+		}
+
+		// If there's a 'resolved' or 'unresolved' state currently set
+		if ( $args['new_state'] )
+			$text = sprintf( __( '%1$s marked this %2$s<br />%3$s', 'p2-resolve' ), esc_html( $display_name ), esc_html( $args['new_state'] ), $date_time );
+		else
+			$text = sprintf( __( '%1$s removed resolution<br />%2$s', 'p2-resolve' ), esc_html( $display_name ), $date_time );
+
+		$html = '<li>' . $avatar . '<span class="audit-log-text">' . $text . '</span></li>';
+		return $html;
+	}
+
+	function enqueue() {
+		wp_enqueue_script( 'p2-resolved-posts', plugins_url( 'js/p2-resolved-posts.js', __FILE__ ), array( 'jquery' ), P2_RESOLVED_POSTS_VERSION );
+
+		$ajax_polling_url = add_query_arg( array( 'action' => 'p2_resolved_posts_get_status' ), wp_nonce_url( admin_url( 'admin-ajax.php' ), 'p2_resolved_posts_get_status' ) );
+		wp_localize_script( 'p2-resolved-posts', 'p2rp', array( 'ajaxPollingUrl' => $ajax_polling_url, 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
+
+		wp_enqueue_style( 'p2-resolved-posts', plugins_url( 'css/p2-resolved-posts.css', __FILE__ ), array(), P2_RESOLVED_POSTS_VERSION );
+	}
+
+	function post_class( $classes, $class, $post_id ) {
+		if ( has_term( 'resolved', self::taxonomy, $post_id ) )
+			$classes[] = 'state-resolved';
+
+		if ( has_term( 'unresolved', self::taxonomy, $post_id ) )
+			$classes[] = 'state-unresolved';
+		return $classes;
+	}
+
+	function is_ajax_request() {
+		return ( defined( 'DOING_AJAX' ) && DOING_AJAX && ! empty( $_REQUEST['action'] ) && false !== strpos( $_REQUEST['action'], 'p2_resolve' ) );
+	}
+
+
+	function widgets_init() {
+		include_once( dirname( __FILE__ ) . '/php/resolved-posts-links-widget.php' );
+		include_once( dirname( __FILE__ ) . '/php/unresolved-posts-widget.php' );
+		register_widget( 'P2_Resolved_Posts_Widget' );
+		register_widget( 'P2_Resolved_Posts_Show_Unresolved_Posts_Widget' );
+	}
+
+
 
 	function post_form() {
 
@@ -377,173 +464,87 @@ class P2_Resolved_Posts {
 	}
 
 
-	function enqueue() {
-		wp_enqueue_script( 'p2-resolved-posts', plugins_url( 'js/p2-resolved-posts.js', __FILE__ ), array( 'jquery' ), P2_RESOLVED_POSTS_VERSION );
-
-		$ajax_polling_url = add_query_arg( array( 'action' => 'p2_resolved_posts_get_status' ), wp_nonce_url( admin_url( 'admin-ajax.php' ), 'p2_resolved_posts_get_status' ) );
-		wp_localize_script( 'p2-resolved-posts', 'p2rp', array( 'ajaxPollingUrl' => $ajax_polling_url, 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
-
-		wp_enqueue_style( 'p2-resolved-posts', plugins_url( 'css/p2-resolved-posts.css', __FILE__ ), array(), P2_RESOLVED_POSTS_VERSION );
+	function register_taxonomy() {
+		register_taxonomy( self::taxonomy, 'post', array(
+			'public' => true,
+			'query_var' => 'resolved',
+			'rewrite' => false,
+			'show_ui' => false,
+		) );
 	}
 
 
-	function post_class( $classes, $class, $post_id ) {
-		if ( has_term( 'resolved', self::taxonomy, $post_id ) )
-			$classes[] = 'state-resolved';
+	function parse_request( $qvs ) {
+		if ( ! isset( $qvs['resolved'] ) )
+			return $qvs;
 
-		if ( has_term( 'unresolved', self::taxonomy, $post_id ) )
-			$classes[] = 'state-unresolved';
-		return $classes;
-	}
+		if ( ! in_array( $qvs['resolved'], array( 'resolved', 'unresolved' ) ) ) {
+			unset( $qvs['resolved'] );
+			return $qvs;
+		}
 
-	function handle_state_change() {
+		// Just to be safe
+		$qvs['resolved'] = sanitize_key( $qvs['resolved'] );
 
-		// bail if ajax and init
-		if ( 'init' == current_filter() && $this->is_ajax_request() )
-			return;
+		add_action( 'parse_query', array( $this, 'parse_query' ) );
+		add_filter( 'template_include', array( $this, 'force_home_template' ) );
 
-		// Bail if the action isn't ours
-		if ( !isset( $_GET['post_id'], $_GET['action'], $_GET['nonce'], $_GET['mark'] ) || $_GET['action'] != 'p2_resolve' )
-			return;
+		if ( ! isset( $qvs['tax_query'] ) )
+			$qvs['tax_query'] = array();
 
-		$error = false;
-		$current_user = wp_get_current_user();
+		// Don't pay attention to sticky posts
+		$qvs['ignore_sticky_posts'] = 1;
 
-		$states = array(
-			'resolved',
-			'unresolved',
-			'normal',
+		// Filter the query to just the type of posts we're looking for
+		$qvs['tax_query'][] = array(
+			'taxonomy' => self::taxonomy,
+			'terms' => array( $qvs['resolved'] ),
+			'field' => 'slug',
+			'operator' => 'IN',
 		);
-		$state = '';
-		if ( in_array( $_GET['mark'], $states ) )
-			$state = sanitize_key( $_GET['mark'] );
-		else
-			$error = __( 'Bad state', 'p2-resolve' );
+		if ( isset( $_GET['tags'] ) || isset( $_GET['post_tag'] ) ) {
+			$filter_tags = ( isset( $_GET['tags'] ) ) ? $_GET['tags'] : $_GET['post_tag'];
+			$filter_tags = (array) explode( ',', $filter_tags );
 
-		$error = false;
-		$post_id = intval( $_GET['post_id'] );
+	 		foreach( (array) $filter_tags as $filter_tag ) {
+	 			$filter_tag = sanitize_key( $filter_tag );
+	 			$new_tax_query = array(
+						'taxonomy' => 'post_tag',
+					);
 
-		$post = get_post( $post_id );
-		if ( !$post )
-			$error = __( 'Invalid post', 'p2-resolve' );
+	 			if ( 0 === strpos( $filter_tag, '-') )
+					$new_tax_query['operator'] = 'NOT IN';
 
-		if ( !wp_verify_nonce( $_GET['nonce'], 'p2-resolve-' . $post_id ) )
-			$error = __( "Nonce error", 'p2-resolve' );
+				$filter_tag = trim( $filter_tag, '-' );
 
-		if ( empty( $error ) ) {
-			if ( $state == 'normal' )
-				$state = '';
-			$this->change_state( $post_id, $state );
-			$response = $this->p2_action_links();
-			clean_object_term_cache( $post->ID, $post->post_type );
-		} else {
-			$response['state'] = 'error';
-			$response['action_links'] = $error;
-		}
+				if ( is_numeric( $filter_tag ) )
+					$new_tax_query['field'] = 'ID';
+				else
+					$new_tax_query['field'] = 'slug';
 
-		if ( $this->is_ajax_request() ) {
-			header( 'Content-Type: application/json' );
-			die( json_encode( array( 'action_links' => $action_links, 'state' => $state ) ) );
-		} else {
-			wp_safe_redirect( get_permalink( $post->ID ) );
-		}
-		die;
+				$new_tax_query['terms'] = $filter_tag;
+	 			$qvs['tax_query'][] = $new_tax_query;
+	 		}
+	 	}
 
-	}
+	 	if ( isset( $_GET['order'] ) && in_array( strtolower( $_GET['order'] ), array( 'asc', 'desc' ) ) )
+	 		$qvs['order'] = sanitize_key( $_GET['order'] );
 
-	function change_state( $post_id, $state, $inserting_post = false ) {
-		if ( ! taxonomy_exists( self::taxonomy ) )
-			$this->register_taxonomy();
-
-		wp_set_object_terms( $post_id, (array)$state, self::taxonomy, false );
-		$args = array(
-				'new_state' => $state,
-			);
-		$args = $this->log_state_change( $post_id, $args );
-		do_action( 'p2_resolved_posts_changed_state', $state, $post_id, $inserting_post );
-
-		if ( ! $inserting_post ) {
-			return $this->single_audit_log_output( $args );
-		}
-	}
-
-	function log_state_change( $post_id, $args = array() ) {
-
-		$defaults = array(
-				'user_login' => wp_get_current_user()->user_login,
-				'new_state' => '',
-				'timestamp' => time(),
-			);
-		$args = array_merge( $defaults, $args );
-		add_post_meta( $post_id, self::audit_log_key, $args );
-		return $args;
-	}
-
-	function single_audit_log_output( $args ) {
-
-		$date = get_date_from_gmt( date( 'Y-m-d H:i:s', $args['timestamp'] ), get_option( 'date_format' ) );
-		$time = get_date_from_gmt( date( 'Y-m-d H:i:s', $args['timestamp'] ), get_option( 'time_format' ) );
-		$date_time = sprintf( __( '<span class="date-time">%1$s on %2$s</span>', 'p2-resolve' ), esc_html( $time ), esc_html( $date ) );
-
-		$user = get_user_by( 'login', $args['user_login'] );
-		// Accomodate for removed users
-		if ( $user ) {
-			$avatar = get_avatar( $user->ID, 16 );
-			$display_name = $user->display_name;
-		} else {
-			$avatar = '';
-			$display_name = __( 'Someone', 'p2-resolve' );
-		}
-
-		// If there's a 'resolved' or 'unresolved' state currently set
-		if ( $args['new_state'] )
-			$text = sprintf( __( '%1$s marked this %2$s<br />%3$s', 'p2-resolve' ), esc_html( $display_name ), esc_html( $args['new_state'] ), $date_time );
-		else
-			$text = sprintf( __( '%1$s removed resolution<br />%2$s', 'p2-resolve' ), esc_html( $display_name ), $date_time );
-
-		$html = '<li>' . $avatar . '<span class="audit-log-text">' . $text . '</span></li>';
-		return $html;
+		return $qvs;
 	}
 
 	/**
-	 * Automatically mark a newly published post as unresolved
-	 * To enable, include the following in your theme's functions.php:
-	 * - add_filter( 'p2_resolved_posts_mark_new_as_unresolved', '__return_true' );
-	 *
-	 * @since 0.2
+	 * Nacin thought this was important
 	 */
-	function mark_new_as_unresolved( $post_id, $post ) {
-
-		// Allow certain types of posts to not be marked as unresolved
-		if ( !apply_filters( 'p2_resolved_posts_maybe_mark_new_as_unresolved', true, $post ) )
-			return;
-
-		wp_set_post_terms( $post_id, array( 'unresolved' ), self::taxonomy );
-		$args = array(
-					'new_state' => 'unresolved',
-				);
-		$this->log_state_change( $post_id, $args );
+	function parse_query( $query ) {
+		$query->is_home = true; // Force home detection.
 	}
 
 	/**
-	 * Automatically close comments on resolved posts
-	 * To enable, include the following in your theme's functions.php:
-	 * - add_filter( 'p2_resolved_posts_open_close_comments', '__return_true' );
-	 *
-	 * @since 0.3
+	 * Nacin thought this was important
 	 */
-	function open_close_comments( $state, $post_id, $inserting_post ) {
-
-		if ( $inserting_post )
-			return;
-
-		$the_post = get_post( $post_id );
-		if ( 'resolved' == $state )
-			$the_post->comment_status = 'closed';
-		elseif ( 'closed' != get_option('default_comment_status') )
-			$the_post->comment_status = 'open';
-		wp_update_post( $the_post );
-
+	function force_home_template() {
+		return get_home_template();
 	}
 
 }
