@@ -65,7 +65,7 @@ jQuery(document).ready(function($){
 	);
 
 	/**
-	 * detect the mark as unresolved checkbox and inser the special keyword
+	 * detect the mark as unresolved checkbox and insert the special keyword
 	 */
 	$( '#new_post' ).on( 'submit.p2_resolved', function(e){
 		if ( ! $( '#p2_resolved_posts_mark_as_unresolved_checkbox' ).prop( 'checked' ) )
