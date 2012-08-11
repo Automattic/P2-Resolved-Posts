@@ -332,8 +332,8 @@ class P2_Resolved_Posts {
 
 
 	function widgets_init() {
-		include_once( dirname( __FILE__ ) . '/php/resolved-posts-links-widget.php' );
-		include_once( dirname( __FILE__ ) . '/php/unresolved-posts-widget.php' );
+		require_once( dirname( __FILE__ ) . '/php/resolved-posts-links-widget.php' );
+		require_once( dirname( __FILE__ ) . '/php/unresolved-posts-widget.php' );
 		register_widget( 'P2_Resolved_Posts_Widget' );
 		register_widget( 'P2_Resolved_Posts_Show_Unresolved_Posts_Widget' );
 	}
