@@ -136,7 +136,7 @@ class P2_Resolved_Posts {
 		global $post;
 
 		if ( $this->is_ajax_request() && !empty( $_REQUEST['post_id'] ) ) {
-			$post_id = $_REQUEST['post_id'];
+			$post_id = (int) $_REQUEST['post_id'];
 		} elseif ( is_object( $post ) && !empty( $post->ID ) ) {
 			$post_id = $post->ID;
 		} else {
