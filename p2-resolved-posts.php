@@ -85,8 +85,6 @@ class P2_Resolved_Posts {
 	 * Automatically mark a newly published post as unresolved
 	 * To enable, include the following in your theme's functions.php:
 	 * - add_filter( 'p2_resolved_posts_mark_new_as_unresolved', '__return_true' );
-	 *
-	 * @since 0.2
 	 */
 	function mark_new_as_unresolved( $post_id, $post ) {
 
@@ -103,10 +101,8 @@ class P2_Resolved_Posts {
 
 	/**
 	 * Automatically close comments on resolved posts
-	 * To enable, include the following in your theme's functions.php:
-	 * - add_filter( 'p2_resolved_posts_open_close_comments', '__return_true' );
-	 *
-	 * @since 0.3
+	 * To disable, include the following in your theme's functions.php:
+	 * - add_filter( 'p2_resolved_posts_disable_open_close_comments', '__return_false' );
 	 */
 	function open_close_comments( $state, $post_id, $inserting_post ) {
 
