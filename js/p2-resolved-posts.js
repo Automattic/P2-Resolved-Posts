@@ -8,7 +8,7 @@ jQuery(document).ready(function($){
 		var query_vars = {};
 		query_string.replace(
 			new RegExp("([^?=&]+)(=([^&]*))?", "g"),
-			function($0, $1, $2, $3) { if ( $3) query_vars[$1] = $3; }
+			function($0, $1, $2, $3) { if ( $3 ) query_vars[$1] = $3; }
 		);
 		return query_vars;
 	}
@@ -42,26 +42,28 @@ jQuery(document).ready(function($){
 	});
 
 	/**
-	 * Display audit log on hover
+	 * Display audit log on mouseenter
 	 */
-	$( '.actions' ).on( 'hover.p2_resolved', '.p2-resolve-wrap',
-		function(){
-			clearTimeout( p2_resolved_hover_out );
-			var audit_log = $(this).find( '.p2-resolved-posts-audit-log' );
-			if ( audit_log.find('li').length ) {
-				p2_resolved_hover_in = setTimeout( function() {
-					audit_log.fadeIn();
-				}, 1250 );
-			}
-		},
-		function(){
-			clearTimeout( p2_resolved_hover_in );
-				var audit_log = $(this).find( '.p2-resolved-posts-audit-log' );
-				p2_resolved_hover_out = setTimeout( function() {
-					audit_log.fadeOut();
-				}, 500 );
+	$( '#postlist' ).on( 'mouseenter.p2_resolved', '.actions .p2-resolve-wrap', function(){
+		clearTimeout( p2_resolved_hover_out );
+		var audit_log = $(this).find( '.p2-resolved-posts-audit-log' );
+		if ( audit_log.find('li').length ) {
+			p2_resolved_hover_in = setTimeout( function() {
+				audit_log.fadeIn();
+			}, 1250 );
 		}
-	);
+	});
+
+	/**
+	 * Hide audit log on mouseleave
+	 */
+	$( '#postlist' ).on( 'mouseleave.p2_resolved', '.actions .p2-resolve-wrap', function(){
+		clearTimeout( p2_resolved_hover_in );
+		var audit_log = $(this).find( '.p2-resolved-posts-audit-log' );
+		p2_resolved_hover_out = setTimeout( function() {
+			audit_log.fadeOut();
+		}, 500 );
+	});
 
 	/**
 	 * detect the mark as unresolved checkbox and insert the special keyword
