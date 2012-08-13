@@ -233,16 +233,11 @@ class P2_Resolved_Posts {
 			if ( $state == 'normal' )
 				$state = '';
 			$this->change_state( $post_id, $state );
-			$response = $this->p2_action_links();
 			clean_object_term_cache( $post->ID, $post->post_type );
-		} else {
-			$response['state'] = 'error';
-			$response['action_links'] = $error;
 		}
 
 		if ( $this->is_ajax_request() ) {
-			header( 'Content-Type: application/json' );
-			die( json_encode( array( 'action_links' => $action_links, 'state' => $state ) ) );
+			$this->p2_action_links();
 		} else {
 			wp_safe_redirect( get_permalink( $post->ID ) );
 		}
