@@ -76,7 +76,7 @@ class P2_Resolved_Posts {
 
 		// Comments can be closed automatically when a post is resolved
 		// if the user wishes
-		if ( ! apply_filters( 'p2_resolved_posts_disable_open_close_comments', false ) )
+		if ( apply_filters( 'p2_resolved_enable_open_close_comments', false ) )
 			add_action( 'p2_resolved_posts_changed_state', array( $this, 'open_close_comments' ), 10, 3 );
 
 	}
