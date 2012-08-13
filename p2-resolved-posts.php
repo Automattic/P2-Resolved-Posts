@@ -58,7 +58,7 @@ class P2_Resolved_Posts {
 		add_action( 'comment_post', array( $this, 'process_comment_submission' ), 10, 2 );
 		add_action( 'wp_insert_post', array( $this, 'process_post_submission' ), 1000, 2 );
 		add_action( 'wp_ajax_p2_resolve', array( $this, 'handle_state_change' ) );
-		add_action( 'wp_ajax_p2_resolve', array( $this, 'handle_state_change' ) );
+		add_action( 'wp_ajax_no_priv_p2_resolve', array( $this, 'handle_state_change' ) );
 		add_action( 'wp_ajax_p2_resolved_posts_get_status', array( $this, 'p2_action_links' ) );
 		add_action( 'wp_ajax_no_priv_p2_resolved_posts_get_status', array( $this, 'p2_action_links' ) );
 
