@@ -33,8 +33,6 @@ class P2_Resolved_Posts {
 	function __construct() {
 		self::$instance = $this;
 
-		load_plugin_textdomain( 'p2-resolve', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
-
 		add_action( 'after_setup_theme', array( $this, 'after_setup_theme' ) );
 	}
 
@@ -48,6 +46,8 @@ class P2_Resolved_Posts {
 			add_action( 'admin_notices', array( $this, 'action_admin_notices' ) );
 			return;
 		}
+
+		load_plugin_textdomain( 'p2-resolve', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 
 		add_action( 'wp_head', array( $this, 'action_wp_head_css' ) );
 		add_action( 'wp_head', array( $this, 'action_wp_head_ajax' ) );
