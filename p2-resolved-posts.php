@@ -509,7 +509,6 @@ class P2_Resolved_Posts {
 			if ( $state == $this->get_first_state()->slug )
 				$state = '';
 			$message = $this->change_state( $post_id, $state );
-			clean_object_term_cache( $post->ID, $post->post_type );
 		} else {
 			$message = $error;
 		}
@@ -536,7 +535,8 @@ class P2_Resolved_Posts {
 				'new_state' => $state,
 			);
 		$args = $this->log_state_change( $post_id, $args );
-		 do_action( 'p2_resolved_posts_changed_state', $state, $post_id );
+		clean_object_term_cache( $post_id, get_post_type( $post_id ) );
+		do_action( 'p2_resolved_posts_changed_state', $state, $post_id );
 
 		return $this->single_audit_log_output( $args );
 	}
@@ -603,12 +603,8 @@ class P2_Resolved_Posts {
 		if ( !apply_filters( 'p2_resolved_posts_maybe_mark_new_as_unresolved', true, $post ) )
 			return;
 
-		$new_state = $this->get_first_state();
-		wp_set_post_terms( $post_id, array( $new_state->slug ), self::taxonomy );
-		$args = array(
-					'new_state' => $new_state->slug,
-				);
-		$this->log_state_change( $post_id, $args );
+		$new_state = $this->get_next_state( $this->get_first_state()->slug );
+		$this->change_state( $post_id, $new_state->slug );
 	}
 
 }
