@@ -478,6 +478,7 @@ class P2_Resolved_Posts {
 				'new_state' => $state,
 			);
 		$args = $this->log_state_change( $post_id, $args );
+		 do_action( 'p2_resolved_posts_changed_state', $state, $post_id );
 
 		return $this->single_audit_log_output( $args );
 	}
