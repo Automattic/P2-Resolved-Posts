@@ -27,6 +27,8 @@ class P2_Resolved_Posts {
 	const taxonomy = 'p2_resolved';
 	const audit_log_key = 'p2_resolved_log';
 
+	var $states;
+
 	/**
 	 * Constructor. Saves instance and sets up initial hook.
 	 */
@@ -57,6 +59,29 @@ class P2_Resolved_Posts {
 		add_action( 'widgets_init', array( $this, 'widgets_init' ) );
 		add_filter( 'request', array( $this, 'request' ) );
 		$this->register_taxonomy();
+
+		$states = array(
+				(object)array(
+						'slug'          => 'normal',
+						'name'          => __( 'Normal', 'p2-resolve' ),
+						'link_text'     => __( 'Flag unresolved', 'p2-resolve' ),
+						'next_action'   => __( 'Flag as unresolved', 'p2-resolve' ),
+					),
+				(object)array(
+						'slug'          => 'unresolved',
+						'name'          => __( 'Unresolved', 'p2-resolved' ),
+						'link_text'     => __( 'Unresolved', 'p2-resolve' ),
+						'next_action'   => __( 'Flag as Resolved', 'p2-resolve' ),
+					),
+				(object)array(
+						'slug'          => 'resolved',
+						'name'          => __( 'Resolved', 'p2-resolved' ),
+						'link_text'     => __( 'Resolved', 'p2-resolve' ),
+						'next_action'   => __( 'Remove resolved flag', 'p2-resolve' ),
+					),
+			);
+		$this->states = apply_filters( 'p2_resolved_posts_states', $states );
+
 		if ( ! term_exists( 'unresolved', self::taxonomy ) )
 			wp_insert_term( 'unresolved', self::taxonomy );
 
@@ -87,13 +112,57 @@ class P2_Resolved_Posts {
 	}
 
 	/**
+	 * Get the slugs for all of the registered states
+	 */
+	function get_state_slugs() {
+		return wp_list_pluck( $this->states, 'slug' );
+	}
+
+	/**
+	 * Get the first state this post can be changed to
+	 */
+	function get_first_state() {
+		return array_shift( array_values( $this->states ) );
+	}
+
+	/**
+	 * Given a state, get the next one
+	 */
+	function get_next_state( $slug ) {
+		$position = array_search( $slug, $this->get_state_slugs() );
+		$total = count( $this->get_state_slugs() );
+		// We're at the end, return the first
+		if ( $position == ( $total - 1) )
+			return $this->get_first_state();
+		$next = $position + 1;
+		return $this->states[$next];
+	}
+
+	/**
+	 * Get the last state this post can be in
+	 */
+	function get_last_state() {
+		return array_pop( array_values( $this->states ) );
+	}
+
+	/**
+	 * Get the current state for a post
+	 */
+	function get_current_state( $post_id ) {
+		$state = wp_get_object_terms( $post_id, self::taxonomy );
+		if ( empty( $state ) || is_wp_error( $state ) )
+			return false;
+		return array_shift( wp_filter_object_list( $this->states, array( 'slug' => $state[0]->slug ) ) );
+	}
+
+	/**
 	 * Parse the request if it's a request for our unresolved posts
 	 */
 	function request( $qvs ) {
 		if ( ! isset( $qvs['resolved'] ) )
 			return $qvs;
 
-		if ( ! in_array( $qvs['resolved'], array( 'resolved', 'unresolved' ) ) ) {
+		if ( ! in_array( $qvs['resolved'], $this->get_state_slugs() ) ) {
 			unset( $qvs['resolved'] );
 			return $qvs;
 		}
@@ -180,23 +249,17 @@ class P2_Resolved_Posts {
 			'p2-resolve-link',
 		);
 
-		if ( has_term( 'unresolved', self::taxonomy, get_the_id() ) ) {
-			$css[] = 'state-unresolved';
-			$link = add_query_arg( 'mark', 'resolved', $link );
-			$title = __( 'Flag as Resolved', 'p2-resolve' );
-			$text = __( 'Unresolved', 'p2-resolve' );
-		} else if ( has_term( 'resolved', self::taxonomy, get_the_id() ) ) {
-			$css[] = 'state-resolved';
-			$link = add_query_arg( 'mark', 'normal', $link );
-			$title = __( 'Remove Resolved Flag', 'p2-resolve' );
-			$text = __( 'Resolved', 'p2-resolve' );
-		} else {
-			$link = add_query_arg( 'mark', 'unresolved', $link );
-			$title = __( 'Flag as Unresolved', 'p2-resolve' );
-			$text = __( 'Flag Unresolved', 'p2-resolve' );
-		}
+		$existing_state = $this->get_current_state( get_the_ID() );
+		if ( ! $existing_state )
+			$existing_state = $this->get_first_state();
+		$next_state = $this->get_next_state( $existing_state->slug );
 
-		$output = ' | <span class="p2-resolve-wrap"><a title="' . esc_attr( $title ) . '" href="' . esc_url( $link ) . '" class="' . esc_attr( implode( ' ', $css ) ) . '">' . esc_html( $text ) . '</a>';
+		$css[] = 'state-' . $existing_state->slug;
+		$link = add_query_arg( 'mark', $next_state->slug, $link );
+		$next_action = $existing_state->next_action;
+		$text = $existing_state->link_text;
+
+		$output = ' | <span class="p2-resolve-wrap"><a title="' . esc_attr( $next_action ) . '" href="' . esc_url( $link ) . '" class="' . esc_attr( implode( ' ', $css ) ) . '">' . esc_html( $text ) . '</a>';
 
 		// Hide our audit log output here too
 		$audit_logs = get_post_meta( get_the_id(), self::audit_log_key );
@@ -403,11 +466,11 @@ class P2_Resolved_Posts {
 	 * Extra CSS to style the post when there are open threads
 	 */
 	function post_class( $classes, $class, $post_id ) {
-		if ( has_term( 'resolved', self::taxonomy, $post_id ) )
-			$classes[] = 'state-resolved';
 
-		if ( has_term( 'unresolved', self::taxonomy, $post_id ) )
-			$classes[] = 'state-unresolved';
+		$existing_state = $this->get_current_state( $post_id );
+		if ( $existing_state )
+			$classes[] = 'state-' . $existing_state->slug;
+
 		return $classes;
 	}
 
@@ -425,13 +488,8 @@ class P2_Resolved_Posts {
 		$blog_id = get_current_blog_id();
 		$current_user = wp_get_current_user();
 
-		$states = array(
-			'resolved',
-			'unresolved',
-			'normal',
-		);
 		$state = '';
-		if ( in_array( $_GET['mark'], $states ) )
+		if ( in_array( $_GET['mark'], $this->get_state_slugs() ) )
 			$state = sanitize_key( $_GET['mark'] );
 		else
 			$error = __( 'Bad state', 'p2-resolve' );
@@ -448,7 +506,7 @@ class P2_Resolved_Posts {
 
 		// If there were no errors, set the post in that state
 		if ( !$error ) {
-			if ( $state == 'normal' )
+			if ( $state == $this->get_first_state()->slug )
 				$state = '';
 			$message = $this->change_state( $post_id, $state );
 			clean_object_term_cache( $post->ID, $post->post_type );
@@ -522,7 +580,7 @@ class P2_Resolved_Posts {
 			$display_name = __( 'Someone', 'p2-resolve' );
 		}
 
-		// If there's a 'resolved' or 'unresolved' state currently set
+		// If there's a state currently set
 		if ( $args['new_state'] )
 			$text = sprintf( __( '%1$s marked this %2$s<br />%3$s', 'p2-resolve' ), esc_html( $display_name ), esc_html( $args['new_state'] ), $date_time );
 		else
@@ -545,9 +603,10 @@ class P2_Resolved_Posts {
 		if ( !apply_filters( 'p2_resolved_posts_maybe_mark_new_as_unresolved', true, $post ) )
 			return;
 
-		wp_set_post_terms( $post_id, array( 'unresolved' ), self::taxonomy );
+		$new_state = $this->get_first_state();
+		wp_set_post_terms( $post_id, array( $new_state->slug ), self::taxonomy );
 		$args = array(
-					'new_state' => 'unresolved',
+					'new_state' => $new_state->slug,
 				);
 		$this->log_state_change( $post_id, $args );
 	}

@@ -39,7 +39,7 @@ EOB
 		if ( !get_post( $this->args['post_id'] ) )
 			WP_CLI::error( "Please specify a valid post_id" );
 
-		if ( !in_array( $this->args['state'], array( 'resolved', 'unresolved', 'normal' ) ) )
+		if ( !in_array( $this->args['state'], $p2_resolved_posts->get_state_slugs() ) )
 			WP_CLI::error( "Please specify a valid state: " );
 
 		wp_set_post_terms( $this->args['post_id'], $this->args['state'], P2_Resolved_Posts::taxonomy );
