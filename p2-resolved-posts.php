@@ -119,6 +119,13 @@ class P2_Resolved_Posts {
 	}
 
 	/**
+	 * Given a slug, get the state
+	 */
+	function get_state( $slug ) {
+		return array_shift( wp_filter_object_list( $this->states, array( 'slug' => $slug ) ) );
+	}
+
+	/**
 	 * Get the first state this post can be changed to
 	 */
 	function get_first_state() {
@@ -233,17 +240,25 @@ class P2_Resolved_Posts {
 		register_widget( 'P2_Resolved_Posts_Show_Unresolved_Posts_Widget' );
 	}
 
+	function get_next_action_link( $next_state, $post_id = null ) {
+
+		if ( is_null( $post_id ) )
+			$post_id = get_the_ID();
+
+		$args = array(
+				'action'        => 'p2-resolve',
+				'post-id'       => $post_id,
+				'nonce'         => wp_create_nonce( 'p2-resolve-' . $post_id ),
+				'mark'          => $next_state,
+			);
+		$link = add_query_arg( $args, get_site_url() );
+		return $link;
+	}
+
 	/**
 	 * Add our action links to the P2 post
 	 */
 	function p2_action_links() {
-
-		$args = array(
-			'action' => 'p2-resolve',
-			'post-id' => get_the_ID(),
-			'nonce' => wp_create_nonce( 'p2-resolve-' . get_the_id() ),
-		);
-		$link = add_query_arg( $args, get_site_url() );
 
 		$css = array(
 			'p2-resolve-link',
@@ -255,7 +270,7 @@ class P2_Resolved_Posts {
 		$next_state = $this->get_next_state( $existing_state->slug );
 
 		$css[] = 'state-' . $existing_state->slug;
-		$link = add_query_arg( 'mark', $next_state->slug, $link );
+		$link = $this->get_next_action_link( $next_state->slug );
 		$next_action = $existing_state->next_action;
 		$text = $existing_state->link_text;
 
@@ -418,38 +433,22 @@ class P2_Resolved_Posts {
 				jQuery(this).html('Saving...');
 				jQuery(this).addClass('p2-resolve-ajax-action');
 				jQuery.get( original_link.attr('href') + '&ajax', function(data){
-					// The update was successful
-					if ( data.indexOf('<') == 0 ) {
-						// Depending on the action we took, update the DOM
-						// Need to replace the text, href and the title attribute
-						if ( original_link.attr('href').indexOf('mark=unresolved') != -1 ) {
-							original_link.closest('.post').addClass('state-unresolved');
-							original_link.addClass('state-unresolved');
-							var new_url = original_link.attr('href').replace('mark=unresolved', 'mark=resolved');
-							original_link.attr('href', new_url );
-							original_link.html('<?php _e("Unresolved","p2-resolve"); ?>');
-							original_link.attr('title','<?php _e("Flag as Resolved","p2-resolve"); ?>');
-						} else if ( original_link.attr('href').indexOf('mark=resolved') != -1 ) {
-							original_link.closest('.post').removeClass('state-unresolved').addClass('state-resolved');
-							original_link.removeClass('state-unresolved').addClass('state-resolved');
-							var new_url = original_link.attr('href').replace('mark=resolved', 'mark=normal');
-							original_link.attr('href', new_url );
-							original_link.html('<?php _e("Resolved","p2-resolve"); ?>');
-							original_link.attr('title','<?php _e("Remove Resolved Flag","p2-resolve"); ?>');
-						} else if ( original_link.attr('href').indexOf('mark=normal') != -1 ) {
-							original_link.closest('.post').removeClass('state-resolved');
-							original_link.removeClass('state-resolved');
-							var new_url = original_link.attr('href').replace('mark=normal', 'mark=unresolved');
-							original_link.attr('href', new_url );
-							original_link.html('<?php _e("Flag Unresolved","p2-resolve"); ?>');
-							original_link.attr('title','<?php _e("Flag as Unresolved","p2-resolve"); ?>');
-						}
-						// Update the audit log
-						original_link.closest('.post').find('ul.p2-resolved-posts-audit-log').prepend( data );
 
-					} else {
-						// Display the error if it happened
-						original_link.html(data);
+					// Reset our classes
+					var post_classes = original_link.closest('.post').attr('class').replace( /state-[a-zA-Z0-9]+/, '' );
+					original_link.closest('.post').attr('class', post_classes);
+					var link_classes = original_link.attr('class').replace( /state-[a-zA-Z0-9]+/, '' );
+					original_link.attr('class', link_classes);
+
+					if ( 'ok' == data.status ) {
+						original_link.attr( 'href', data.href );
+						original_link.attr( 'title', data.next_action );
+						original_link.html( data.link_text );
+						original_link.addClass('state-'+data.new_state);
+						original_link.closest('.post').addClass('state-'+data.new_state);
+						original_link.closest('.post').find('ul.p2-resolved-posts-audit-log').prepend( data.audit_log_entry );
+					} else if ( 'error' == data.status ) {
+						original_link.html(data.message);
 						original_link.attr('style', 'color: #FF0000 !important;');
 					}
 					original_link.removeClass('p2-resolve-ajax-action');
@@ -483,44 +482,48 @@ class P2_Resolved_Posts {
 		if ( !isset( $_GET['post-id'], $_GET['action'], $_GET['nonce'], $_GET['mark'] ) || $_GET['action'] != 'p2-resolve' )
 			return;
 
-		$error = false;
-		$blog_id = get_current_blog_id();
-		$blog_id = get_current_blog_id();
-		$current_user = wp_get_current_user();
+		$post_id = intval( $_GET['post-id'] );
 
-		$state = '';
+		// Check that the user is who they say they are
+		if ( ! wp_verify_nonce( $_GET['nonce'], 'p2-resolve-' . $post_id ) )
+			$this->do_response( 'error', array( 'message' => __( "Doin' something fishy, huh?", 'p2-resolve' ) ) );
+
+		// Check that it's a valid state
 		if ( in_array( $_GET['mark'], $this->get_state_slugs() ) )
 			$state = sanitize_key( $_GET['mark'] );
 		else
-			$error = __( 'Bad state', 'p2-resolve' );
+			$this->do_response( 'error', array( 'message' => __( 'Bad state', 'p2-resolve' ) ) );
 
-		$error = false;
-		$post_id = intval( $_GET['post-id'] );
-
+		// Check that the post is valid
 		$post = get_post( $post_id );
 		if ( !$post )
-			$error = __( 'Invalid post', 'p2-resolve' );
+			$this->do_response( 'error', array( 'message' => __( 'Invalid post id', 'p2-resolve' ) ) );
 
-		if ( !wp_verify_nonce( $_GET['nonce'], 'p2-resolve-' . $post_id ) )
-			$error = __( "Nonce error", 'p2-resolve' );
+		$status = 'ok';
+		$data = array(
+				'post_id'         => $post_id,
+				'new_state'       => $state,
+			);
+		$changed_state = $this->change_state( $post_id, $state );
+		$data = array_merge( $changed_state, $data );
+		$this->do_response( $status, $data );
+	}
 
-		// If there were no errors, set the post in that state
-		if ( !$error ) {
-			if ( $state == $this->get_first_state()->slug )
-				$state = '';
-			$message = $this->change_state( $post_id, $state );
-		} else {
-			$message = $error;
-		}
-
-		// Echo data if this was an AJAX request, otherwise go to the post
+	/**
+	 * Do a JSON response
+	 */
+	function do_response( $status, $data ) {
 		if ( isset( $_GET['ajax'] ) ) {
-			echo $message;
+			header( 'Content-type: application/json' );
+			$response = array_merge( array( 'status' => $status ), $data );
+			echo json_encode( $response );
 		} else {
-			wp_safe_redirect( get_permalink( $post->ID ) );
+			if ( 'ok' == $status )
+				wp_safe_redirect( get_permalink( $data['post_id'] ) );
+			else
+				wp_die( $data['message'] );
 		}
-		die;
-
+		exit;
 	}
 
 	/**
@@ -538,7 +541,12 @@ class P2_Resolved_Posts {
 		clean_object_term_cache( $post_id, get_post_type( $post_id ) );
 		do_action( 'p2_resolved_posts_changed_state', $state, $post_id );
 
-		return $this->single_audit_log_output( $args );
+		$state_obj = $this->get_state( $state );
+		$args['next_action'] = $state_obj->next_action;
+		$args['link_text'] = $state_obj->link_text;
+		$args['href'] = $this->get_next_action_link( $this->get_next_state( $state )->slug, $post_id );
+		$args['audit_log_entry'] = $this->single_audit_log_output( $args );
+		return $args;
 	}
 
 	/**
