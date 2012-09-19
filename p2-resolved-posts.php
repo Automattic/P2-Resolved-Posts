@@ -69,13 +69,13 @@ class P2_Resolved_Posts {
 					),
 				(object)array(
 						'slug'          => 'unresolved',
-						'name'          => __( 'Unresolved', 'p2-resolved' ),
+						'name'          => __( 'Unresolved', 'p2-resolve' ),
 						'link_text'     => __( 'Unresolved', 'p2-resolve' ),
 						'next_action'   => __( 'Flag as Resolved', 'p2-resolve' ),
 					),
 				(object)array(
 						'slug'          => 'resolved',
-						'name'          => __( 'Resolved', 'p2-resolved' ),
+						'name'          => __( 'Resolved', 'p2-resolve' ),
 						'link_text'     => __( 'Resolved', 'p2-resolve' ),
 						'next_action'   => __( 'Remove resolved flag', 'p2-resolve' ),
 					),
