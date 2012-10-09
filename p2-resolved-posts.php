@@ -796,6 +796,7 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
 
  		?>
 		<p><label for="<?php echo $this->get_field_id('title'); ?>"><?php _e( 'Title', 'p2-resolved-posts' ); ?>: <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" /></label></p>
+		<p><label for="<?php echo $this->get_field_id('slug'); ?>"><?php _e( 'Slug', 'p2-resolved-posts' ); ?>: <input class="widefat" id="<?php echo $this->get_field_id('slug'); ?>" name="<?php echo $this->get_field_name('slug'); ?>" type="text" value="<?php echo ( $slug ) ? esc_attr( $slug ) : 'unresolved'; ?>" /></label></p>
 		<p><label for="<?php echo $this->get_field_id('posts_per_page'); ?>"><?php _e( 'Posts Per Page', 'p2-resolved-posts' ); ?>: <input class="widefat" id="<?php echo $this->get_field_id('posts_per_page'); ?>" name="<?php echo $this->get_field_name('posts_per_page'); ?>" type="text" value="<?php echo esc_attr( $posts_per_page ); ?>" maxlength="2" /></label></p>
 		<p><label for="<?php echo $this->get_field_id('filter_tags'); ?>"><?php _e( 'Filter to these tags', 'p2-resolved-posts' ); ?>: <input class="widefat" id="<?php echo $this->get_field_id('filter_tags'); ?>" name="<?php echo $this->get_field_name('filter_tags'); ?>" type="text" value="<?php echo esc_attr( $filter_tags ); ?>" /></label><br />
 			<span class="description"><?php _e( "Separate multiple tags with commas, and prefix with '-' to exclude.", 'p2-resolved-posts' ); ?></span>
@@ -821,6 +822,7 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
 		$new_instance = wp_parse_args( (array)$new_instance, $this->widget_args );
 		// Sanitize the values
 		$instance['title'] = sanitize_text_field( $new_instance['title'] );
+		$instance['slug'] = sanitize_text_field( $new_instance['slug'] );
 		$instance['posts_per_page'] = (int)$new_instance['posts_per_page'];
 		if ( $instance['posts_per_page'] < 1 || $instance['posts_per_page'] > 99 )
 			$instance['posts_per_page'] = 1;
@@ -860,9 +862,11 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
  		extract( $args );
  		extract( $instance );
 
+ 		if( !$slug ) $slug = 'unresolved';
+
  		echo $before_widget;
  		$link_args = array(
- 				'resolved' => 'unresolved',
+ 				'resolved' => $slug,
  				'tags' => $filter_tags,
  				'order' => $order,
 	 		);
@@ -877,7 +881,7 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
  							array(
  									'taxonomy' => P2_Resolved_Posts::taxonomy,
  									'field' => 'slug',
- 									'terms' => 'unresolved',
+ 									'terms' => $slug,
 	 							),
 	 					),
 	 				'order' => sanitize_key( $order ),
@@ -907,7 +911,7 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
  				echo '<p class="p2-resolved-posts-show-unresolved-posts-pagination">';
  				if ( $unresolved_posts->found_posts > $posts_per_page )
 		 			echo '<a href="#" class="p2-resolved-posts-previous-posts p2-resolved-posts-pagination-link" class="inactive">' . __( '&larr;', 'p2-resolved-posts' ) . '</a>&nbsp;&nbsp;';
-		 		echo sprintf( __( 'Showing <span class="p2-resolved-posts-first-post">1</span>-<span class="p2-resolved-posts-last-post">%1$d</span> of <span class="p2-resolved-posts-total-posts">%2$d</span> unresolved posts'), esc_html( $posts_per_page ), esc_html( $unresolved_posts->found_posts ) );
+		 		echo sprintf( __( 'Showing <span class="p2-resolved-posts-first-post">1</span>-<span class="p2-resolved-posts-last-post">%1$d</span> of <span class="p2-resolved-posts-total-posts">%2$d</span> %3$s posts'), esc_html( $posts_per_page ), esc_html( $unresolved_posts->found_posts ), esc_html( $slug ) );
 		 		if ( $unresolved_posts->found_posts > $posts_per_page )
 		 			echo '&nbsp;&nbsp;<a href="#" class="p2-resolved-posts-next-posts p2-resolved-posts-pagination-link">' . __( '&rarr;', 'p2-resolved-posts' ) . '</a>';
 		 		echo '</p>';
