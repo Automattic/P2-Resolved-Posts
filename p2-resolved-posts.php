@@ -616,6 +616,7 @@ class P2_Resolved_Posts {
 	}
 
 }
+global $p2_resolved_posts;
 $p2_resolved_posts = new P2_Resolved_Posts();
 
 
@@ -791,12 +792,19 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
  	 * Form for the widget settings
  	 */
  	function form( $instance ) {
+ 		global $p2_resolved_posts;
  		$instance = wp_parse_args( (array)$instance, $this->widget_args );
  		extract( $instance );
 
+ 		$state = ( ! isset( $state ) ) ? $p2_resolved_posts->get_next_state( $p2_resolved_posts->get_first_state()->slug )->slug : $state;
+
  		?>
 		<p><label for="<?php echo $this->get_field_id('title'); ?>"><?php _e( 'Title', 'p2-resolved-posts' ); ?>: <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" /></label></p>
-		<p><label for="<?php echo $this->get_field_id('slug'); ?>"><?php _e( 'Slug', 'p2-resolved-posts' ); ?>: <input class="widefat" id="<?php echo $this->get_field_id('slug'); ?>" name="<?php echo $this->get_field_name('slug'); ?>" type="text" value="<?php echo ( $slug ) ? esc_attr( $slug ) : 'unresolved'; ?>" /></label></p>
+		<p><label for="<?php echo $this->get_field_id('slug'); ?>"><?php _e( 'State', 'p2-resolved-posts' ); ?>: <select id="<?php echo $this->get_field_id( 'state' ); ?>" name="<?php echo $this->get_field_name( 'state' ); ?>">
+		<?php foreach( $p2_resolved_posts->states as $post_state ) {
+			echo '<option value="' . esc_attr( $post_state->slug ) . '"' . selected( $state, $post_state->slug, false ) . '>' . esc_html( $post_state->name ) . '</option>';
+		} ?>
+		</select></label></p>
 		<p><label for="<?php echo $this->get_field_id('posts_per_page'); ?>"><?php _e( 'Posts Per Page', 'p2-resolved-posts' ); ?>: <input class="widefat" id="<?php echo $this->get_field_id('posts_per_page'); ?>" name="<?php echo $this->get_field_name('posts_per_page'); ?>" type="text" value="<?php echo esc_attr( $posts_per_page ); ?>" maxlength="2" /></label></p>
 		<p><label for="<?php echo $this->get_field_id('filter_tags'); ?>"><?php _e( 'Filter to these tags', 'p2-resolved-posts' ); ?>: <input class="widefat" id="<?php echo $this->get_field_id('filter_tags'); ?>" name="<?php echo $this->get_field_name('filter_tags'); ?>" type="text" value="<?php echo esc_attr( $filter_tags ); ?>" /></label><br />
 			<span class="description"><?php _e( "Separate multiple tags with commas, and prefix with '-' to exclude.", 'p2-resolved-posts' ); ?></span>
@@ -822,7 +830,7 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
 		$new_instance = wp_parse_args( (array)$new_instance, $this->widget_args );
 		// Sanitize the values
 		$instance['title'] = sanitize_text_field( $new_instance['title'] );
-		$instance['slug'] = sanitize_text_field( $new_instance['slug'] );
+		$instance['state'] = sanitize_key( $new_instance['state'] );
 		$instance['posts_per_page'] = (int)$new_instance['posts_per_page'];
 		if ( $instance['posts_per_page'] < 1 || $instance['posts_per_page'] > 99 )
 			$instance['posts_per_page'] = 1;
@@ -859,14 +867,15 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
  	 * @todo The output should be cached and regenerated when a post is marked as resolved, etc.
  	 */
  	function widget( $args, $instance ) {
+ 		global $p2_resolved_posts;
  		extract( $args );
  		extract( $instance );
 
- 		if( !$slug ) $slug = 'unresolved';
+ 		$state = ( ! isset( $state ) ) ? $p2_resolved_posts->get_next_state( $p2_resolved_posts->get_first_state()->slug )->slug : $state;
 
  		echo $before_widget;
  		$link_args = array(
- 				'resolved' => $slug,
+ 				'resolved' => $state,
  				'tags' => $filter_tags,
  				'order' => $order,
 	 		);
@@ -881,7 +890,7 @@ class P2_Resolved_Posts_Widget extends WP_Widget {
  							array(
  									'taxonomy' => P2_Resolved_Posts::taxonomy,
  									'field' => 'slug',
- 									'terms' => $slug,
+ 									'terms' => $state,
 	 							),
 	 					),
 	 				'order' => sanitize_key( $order ),
