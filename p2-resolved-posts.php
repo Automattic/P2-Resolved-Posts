@@ -46,13 +46,15 @@ class P2_Resolved_Posts {
 	 */
 	function after_setup_theme() {
 
+		load_plugin_textdomain( 'p2-resolve', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+
 		if ( ! class_exists( 'P2' ) ) {
 			// Don't run the plugin if P2 isn't active, but display an admin notice
 			add_action( 'admin_notices', array( $this, 'action_admin_notices' ) );
 			return;
 		}
 
-		load_plugin_textdomain( 'p2-resolve', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+		add_action( 'init', array( $this, 'action_init' ) );
 
 		add_action( 'wp_head', array( $this, 'action_wp_head_css' ) );
 		add_action( 'wp_head', array( $this, 'action_wp_head_ajax' ) );
@@ -61,6 +63,14 @@ class P2_Resolved_Posts {
 		add_filter( 'post_class', array( $this, 'post_class' ), 10, 3 );
 		add_action( 'widgets_init', array( $this, 'widgets_init' ) );
 		add_filter( 'request', array( $this, 'request' ) );
+
+	}
+
+	/**
+	 * Load textdomain, register the taxonomy, etc.
+	 */
+	function action_init() {
+
 		$this->register_taxonomy();
 
 		$states = array(
