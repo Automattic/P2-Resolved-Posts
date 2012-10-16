@@ -25,19 +25,44 @@ if ( defined('WP_CLI') && WP_CLI )
  */
 class P2_Resolved_Posts {
 
-	static $instance;
-
 	const taxonomy = 'p2_resolved';
 	const audit_log_key = 'p2_resolved_log';
 
 	var $states;
 
 	/**
-	 * Constructor. Saves instance and sets up initial hook.
+	 * @var P2 Resolved Posts The one true P2 Resolved Posts
 	 */
-	function __construct() {
-		self::$instance = $this;
+	private static $instance;
 
+	/**
+	 * Main P2 Resolved Posts Instance
+	 *
+	 * Insures that only one instance of P2 Resolved Posts exists in memory at any one
+	 * time. Also prevents needing to define globals all over the place.
+	 *
+	 * @since P2 Resolved Posts 0.3
+	 * @staticvar array $instance
+	 * @uses P2_Resolved_Posts::setup_actions() Setup the hooks and actions
+	 * @see P2ResolvedPosts()
+	 * @return The one true P2 Resolved POsts
+	 */
+	public static function instance() {
+		if ( ! isset( self::$instance ) ) {
+			self::$instance = new P2_Resolved_Posts;
+			self::$instance->setup_actions();
+			// Backwards compat for when we promoted use of the $p2_resolved_posts global
+			global $p2_resolved_posts;
+			$p2_resolved_posts = self::$instance;
+		}
+		return self::$instance;
+	}
+
+	private function __construct() {
+		/** Do nothing **/
+	}
+
+	public function setup_actions() {
 		add_action( 'after_setup_theme', array( $this, 'after_setup_theme' ) );
 	}
 
@@ -629,5 +654,8 @@ class P2_Resolved_Posts {
 	}
 
 }
-global $p2_resolved_posts;
-$p2_resolved_posts = new P2_Resolved_Posts();
+
+function P2ResolvedPosts() {
+	return P2_Resolved_Posts::instance();
+}
+add_action( 'plugins_loaded', 'P2ResolvedPosts' );
