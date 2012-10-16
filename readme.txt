@@ -2,7 +2,7 @@
 Contributors: danielbachhuber, automattic
 Tags: gtd, productivity, workflow, p2
 Requires at least: 3.1
-Tested up to: 3.4.1
+Tested up to: 3.4.2
 Stable tag: 0.2
 
 Lightweight GTD for the P2 WordPress theme.
@@ -37,7 +37,8 @@ Feel free to ask a question in the forums!
 
 == Changelog ==
 
-= 0.3 (??? ??, 2012) =
+= 0.3 (Oct. 16, 2012) =
+* Support for registering your own custom states. Use something like `P2ResolvedPosts()->add_state( 'waiting-review', 'Waiting Review', array( 'after' => 'normal' ) );` to add a state, or `P2ResolvedPosts()->remove_state( 'unresolved' );` to remove a state.
 * Converted to a partial singleton pattern
 * Code cleanup
 
