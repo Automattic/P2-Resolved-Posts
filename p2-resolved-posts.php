@@ -176,8 +176,8 @@ class P2_Resolved_Posts {
 		$this->states = array_values( $this->states );
 		$this->states = apply_filters( 'p2_resolved_posts_states', $this->states );
 
-		if ( ! term_exists( 'unresolved', self::taxonomy ) )
-			wp_insert_term( 'unresolved', self::taxonomy );
+		if ( ! term_exists( $this->get_first_state()->slug, self::taxonomy ) )
+			wp_insert_term( $this->get_first_state()->slug, self::taxonomy );
 
 		// Posts can be marked unresolved automatically by default
 		// if the user wishes
