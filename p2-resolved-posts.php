@@ -309,12 +309,12 @@ class P2_Resolved_Posts {
 		?>
 		<style type="text/css">
 
-		#main #postlist li.post {
+		#main #postlist li.hentry {
 			border-left: 8px solid #FFF;
 			padding-left: 7px;
 		}
 
-		#main #postlist li.post.state-unresolved {
+		#main #postlist li.hentry.state-unresolved {
 			border-left-color: #E6000A;
 			-webkit-border-top-left-radius: 0;
 			-moz-border-radius-topleft: 0;
@@ -323,11 +323,11 @@ class P2_Resolved_Posts {
 			border-top-left-radius: 0;
 		}
 
-		#main #postlist li.post.state-unresolved .actions a.p2-resolve-link {
+		#main #postlist li.hentry.state-unresolved .actions a.p2-resolve-link {
 			background-color: #E6000A;
 		}
 
-		#main #postlist li.post.state-resolved {
+		#main #postlist li.hentry.state-resolved {
 			border-left-color: #009632;
 			-webkit-border-top-left-radius: 0;
 			-moz-border-radius-topleft: 0;
@@ -336,12 +336,12 @@ class P2_Resolved_Posts {
 			border-top-left-radius: 0;
 		}
 
-		#main #postlist li.post.state-resolved .actions a.p2-resolve-link {
+		#main #postlist li.hentry.state-resolved .actions a.p2-resolve-link {
 			background-color: #009632;
 		}
 
-		#main #postlist li.post.state-unresolved .actions a.p2-resolve-link,
-		#main #postlist li.post.state-resolved .actions a.p2-resolve-link {
+		#main #postlist li.hentry.state-unresolved .actions a.p2-resolve-link,
+		#main #postlist li.hentry.state-resolved .actions a.p2-resolve-link {
 			color: #fff;
 			padding: 1px 3px;
 			-webkit-border-radius: 2px;
@@ -351,12 +351,12 @@ class P2_Resolved_Posts {
 			border-radius: 2px;
 		}
 
-		#main #postlist li.post .actions a.p2-resolve-link:hover,
-		#main #postlist li.post .actions a.p2-resolve-link.p2-resolve-ajax-action {
+		#main #postlist li.hentry .actions a.p2-resolve-link:hover,
+		#main #postlist li.hentry .actions a.p2-resolve-link.p2-resolve-ajax-action {
 			background-color: #888;
 		}
 
-		#main #postlist li.post ul.p2-resolved-posts-audit-log,
+		#main #postlist li.hentry ul.p2-resolved-posts-audit-log,
 		#main .controls ul.p2-resolved-posts-audit-log {
 			background-color: #FFFFFF;
 			padding-top: 3px;
@@ -371,7 +371,7 @@ class P2_Resolved_Posts {
 			display: none;
 		}
 
-		#main #postlist li.post ul.p2-resolved-posts-audit-log li {
+		#main #postlist li.hentry ul.p2-resolved-posts-audit-log li {
 			list-style-type: none;
 			color: #777;
 			opacity: 0.6;
@@ -381,13 +381,13 @@ class P2_Resolved_Posts {
 			padding-bottom: 2px;
 		}
 
-		#main #postlist li.post ul.p2-resolved-posts-audit-log li img {
+		#main #postlist li.hentry ul.p2-resolved-posts-audit-log li img {
 			float: left;
 			margin-right: 0;
 			margin-top: 4px;
 		}
 
-		#main #postlist li.post ul.p2-resolved-posts-audit-log li span.audit-log-text {
+		#main #postlist li.hentry ul.p2-resolved-posts-audit-log li span.audit-log-text {
 			margin-left: 25px;
 			display: block;
 		}
@@ -396,7 +396,7 @@ class P2_Resolved_Posts {
 			font-size: 10px;
 		}
 
-		#main #postlist li.post ul.p2-resolved-posts-audit-log li:first-child {
+		#main #postlist li.hentry ul.p2-resolved-posts-audit-log li:first-child {
 			opacity: 1.0;
 		}
 
