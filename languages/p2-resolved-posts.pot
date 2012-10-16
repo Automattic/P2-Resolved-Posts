@@ -2,9 +2,9 @@
 # This file is distributed under the same license as the P2 Resolved Posts package.
 msgid ""
 msgstr ""
-"Project-Id-Version: P2 Resolved Posts 0.2-working\n"
+"Project-Id-Version: P2 Resolved Posts 0.3-working\n"
 "Report-Msgid-Bugs-To: http://wordpress.org/tag/p2-resolved-posts\n"
-"POT-Creation-Date: 2012-07-19 04:29:04+00:00\n"
+"POT-Creation-Date: 2012-10-16 23:34:32+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -12,160 +12,184 @@ msgstr ""
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 
-#: p2-resolved-posts.php:70
+#: p2-resolved-posts.php:106
+msgid "Normal"
+msgstr ""
+
+#: p2-resolved-posts.php:107
+msgid "Flag unresolved"
+msgstr ""
+
+#: p2-resolved-posts.php:108
+msgid "Flag as unresolved"
+msgstr ""
+
+#: p2-resolved-posts.php:112 p2-resolved-posts.php:113
+msgid "Unresolved"
+msgstr ""
+
+#: p2-resolved-posts.php:114
+msgid "Flag as Resolved"
+msgstr ""
+
+#: p2-resolved-posts.php:118 p2-resolved-posts.php:119
+msgid "Resolved"
+msgstr ""
+
+#: p2-resolved-posts.php:120
+msgid "Remove resolved flag"
+msgstr ""
+
+#: p2-resolved-posts.php:133 p2-resolved-posts.php:138
+#: p2-resolved-posts.php:157 p2-resolved-posts.php:159
+msgid "Flag as %s"
+msgstr ""
+
+#: p2-resolved-posts.php:192
 msgid ""
 "P2 Resolved Posts is enabled. You'll also need to activate the <a href='%s' "
 "target='_blank'>P2 theme</a> to start using the plugin."
 msgstr ""
 
-#: p2-resolved-posts.php:183 p2-resolved-posts.php:365
-msgid "Flag as Resolved"
+#: p2-resolved-posts.php:270
+msgid "Adding a state needs to happen before 'init'"
 msgstr ""
 
-#: p2-resolved-posts.php:184 p2-resolved-posts.php:364
-msgid "Unresolved"
+#: p2-resolved-posts.php:290
+msgid "Removing a state needs to happen before 'init'"
 msgstr ""
 
-#: p2-resolved-posts.php:188 p2-resolved-posts.php:372
-msgid "Remove Resolved Flag"
+#: p2-resolved-posts.php:619
+msgid "Doin' something fishy, huh?"
 msgstr ""
 
-#: p2-resolved-posts.php:189 p2-resolved-posts.php:371
-msgid "Resolved"
-msgstr ""
-
-#: p2-resolved-posts.php:192 p2-resolved-posts.php:379
-msgid "Flag as Unresolved"
-msgstr ""
-
-#: p2-resolved-posts.php:193 p2-resolved-posts.php:378
-msgid "Flag Unresolved"
-msgstr ""
-
-#: p2-resolved-posts.php:434
+#: p2-resolved-posts.php:625
 msgid "Bad state"
 msgstr ""
 
-#: p2-resolved-posts.php:441
-msgid "Invalid post"
+#: p2-resolved-posts.php:630
+msgid "Invalid post id"
 msgstr ""
 
-#: p2-resolved-posts.php:444
-msgid "Nonce error"
-msgstr ""
-
-#: p2-resolved-posts.php:509
+#: p2-resolved-posts.php:709
 msgid "<span class=\"date-time\">%1$s on %2$s</span>"
 msgstr ""
 
-#: p2-resolved-posts.php:518
+#: p2-resolved-posts.php:718
 msgid "Someone"
 msgstr ""
 
-#: p2-resolved-posts.php:523
+#: p2-resolved-posts.php:723
 msgid "%1$s marked this %2$s<br />%3$s"
 msgstr ""
 
-#: p2-resolved-posts.php:525
+#: p2-resolved-posts.php:725
 msgid "%1$s removed resolution<br />%2$s"
 msgstr ""
 
-#: p2-resolved-posts.php:564
+#: php/class-p2-resolved-posts-widget.php:11
 msgid "Allows querying of resolved and unresolved posts"
 msgstr ""
 
-#: p2-resolved-posts.php:566
+#: php/class-p2-resolved-posts-widget.php:13
 msgid "P2 Filter Posts"
 msgstr ""
 
-#: p2-resolved-posts.php:580 p2-resolved-posts.php:582
+#: php/class-p2-resolved-posts-widget.php:27
+#: php/class-p2-resolved-posts-widget.php:29
 msgid "Show <strong>unresolved</strong> threads"
 msgstr ""
 
-#: p2-resolved-posts.php:586 p2-resolved-posts.php:588
+#: php/class-p2-resolved-posts-widget.php:33
+#: php/class-p2-resolved-posts-widget.php:35
 msgid "Show resolved threads"
 msgstr ""
 
-#: p2-resolved-posts.php:592 p2-resolved-posts.php:594
+#: php/class-p2-resolved-posts-widget.php:39
+#: php/class-p2-resolved-posts-widget.php:41
 msgid "Show all threads"
 msgstr ""
 
-#: p2-resolved-posts.php:607
+#: php/class-p2-resolved-posts-widget.php:54
 msgid "Title:"
 msgstr ""
 
-#: p2-resolved-posts.php:638
+#: php/class-show-unresolved-posts-widget.php:20
 msgid "Display an (optionally filtered) list of unresolved posts"
 msgstr ""
 
-#: p2-resolved-posts.php:640
+#: php/class-show-unresolved-posts-widget.php:22
 msgid "P2 Unresolved Posts"
 msgstr ""
 
-#: p2-resolved-posts.php:731
+#: php/class-show-unresolved-posts-widget.php:116
 msgid "Title"
 msgstr ""
 
-#: p2-resolved-posts.php:732
+#: php/class-show-unresolved-posts-widget.php:117
+msgid "State"
+msgstr ""
+
+#: php/class-show-unresolved-posts-widget.php:122
 msgid "Posts Per Page"
 msgstr ""
 
-#: p2-resolved-posts.php:733
+#: php/class-show-unresolved-posts-widget.php:123
 msgid "Filter to these tags"
 msgstr ""
 
-#: p2-resolved-posts.php:734
+#: php/class-show-unresolved-posts-widget.php:124
 msgid "Separate multiple tags with commas, and prefix with '-' to exclude."
 msgstr ""
 
-#: p2-resolved-posts.php:736
+#: php/class-show-unresolved-posts-widget.php:126
 msgid "Show"
 msgstr ""
 
-#: p2-resolved-posts.php:738
+#: php/class-show-unresolved-posts-widget.php:128
 msgid "Newest posts first"
 msgstr ""
 
-#: p2-resolved-posts.php:739
+#: php/class-show-unresolved-posts-widget.php:129
 msgid "Oldest posts first"
 msgstr ""
 
-#: p2-resolved-posts.php:804
+#: php/class-show-unresolved-posts-widget.php:198
 msgid "See all matching unresolved posts"
 msgstr ""
 
-#: p2-resolved-posts.php:842
+#: php/class-show-unresolved-posts-widget.php:236
 msgid "&larr;"
 msgstr ""
 
-#: p2-resolved-posts.php:843
+#: php/class-show-unresolved-posts-widget.php:237
 msgid ""
 "Showing <span class=\"p2-resolved-posts-first-post\">1</span>-<span class="
 "\"p2-resolved-posts-last-post\">%1$d</span> of <span class=\"p2-resolved-"
-"posts-total-posts\">%2$d</span> unresolved posts"
+"posts-total-posts\">%2$d</span> %3$s posts"
 msgstr ""
 
-#: p2-resolved-posts.php:845
+#: php/class-show-unresolved-posts-widget.php:239
 msgid "&rarr;"
 msgstr ""
 
-#: p2-resolved-posts.php:861
+#: php/class-show-unresolved-posts-widget.php:255
 msgid "%s old"
 msgstr ""
 
-#: p2-resolved-posts.php:862
+#: php/class-show-unresolved-posts-widget.php:256
 msgid "no comments"
 msgstr ""
 
-#: p2-resolved-posts.php:862
+#: php/class-show-unresolved-posts-widget.php:256
 msgid "one comment"
 msgstr ""
 
-#: p2-resolved-posts.php:862
+#: php/class-show-unresolved-posts-widget.php:256
 msgid "% comments"
 msgstr ""
 
-#: p2-resolved-posts.php:870
+#: php/class-show-unresolved-posts-widget.php:264
 msgid "Nice work! Everything in this list has been resolved."
 msgstr ""
 
