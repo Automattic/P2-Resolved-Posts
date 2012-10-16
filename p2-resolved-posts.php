@@ -54,7 +54,7 @@ class P2_Resolved_Posts {
 			return;
 		}
 
-		add_action( 'init', array( $this, 'action_init' ) );
+		add_action( 'init', array( $this, 'action_init' ), 9 );
 
 		add_action( 'wp_head', array( $this, 'action_wp_head_css' ) );
 		add_action( 'wp_head', array( $this, 'action_wp_head_ajax' ) );
