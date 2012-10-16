@@ -28,7 +28,9 @@ class P2_Resolved_Posts {
 	const taxonomy = 'p2_resolved';
 	const audit_log_key = 'p2_resolved_log';
 
-	var $states;
+	var $states = array();
+	var $states_to_add = array();
+	var $states_to_remove = array();
 
 	/**
 	 * @var P2 Resolved Posts The one true P2 Resolved Posts
@@ -98,7 +100,7 @@ class P2_Resolved_Posts {
 
 		$this->register_taxonomy();
 
-		$states = array(
+		$this->states = array(
 				(object)array(
 						'slug'          => 'normal',
 						'name'          => __( 'Normal', 'p2-resolve' ),
@@ -118,7 +120,61 @@ class P2_Resolved_Posts {
 						'next_action'   => __( 'Remove resolved flag', 'p2-resolve' ),
 					),
 			);
-		$this->states = apply_filters( 'p2_resolved_posts_states', $states );
+		// Add any states the user wants added using the custom helper function
+		foreach( $this->states_to_add as $new_state ) {
+			// Link text defaults to the state name if empty
+			if ( ! $new_state->link_text )
+				$new_state->link_text = $new_state->name;
+
+			// Put the state in the proper position
+			if ( 'first' == $new_state->position ) {
+				// Default next_action text if missing
+				if ( ! $new_state->next_action )
+					$new_state->next_action = sprintf( __( 'Flag as %s', 'p2-resolve' ), $this->get_next_state( $this->get_first_state()->slug )->name );
+				array_unshift( $this->states, $new_state );
+			} else if ( 'last' == $new_state->position ) {
+				// Default next_action text if missing
+				if ( ! $new_state->next_action )
+					$new_state->next_action = sprintf( __( 'Flag as %s', 'p2-resolve' ), $this->get_next_state( $this->get_last_state()->slug )->name );
+				array_push( $this->states, $new_state );
+			} else if ( ! empty( $new_state->position['after'] ) || ! empty( $new_state->position['before'] ) ) {
+				if ( ! empty( $new_state->position['after'] ) ) {
+					$insert = 'after';
+					$match = $new_state->position['after'];
+				} else {
+					$insert = 'before';
+					$match = $new_state->position['before'];
+				}
+				foreach( $this->states as $key => $state ) {
+					if ( $match != $state->slug )
+						continue;
+
+					$index = ( 'after' == $insert ) ? $key + 1 : $key;
+					$first_half = array_slice( $this->states, 0, $index );
+					$second_half = array_slice( $this->states, - ( count( $this->states ) - $index ) );
+					$this->states = $first_half;
+					if ( ! $new_state->next_action && count( $second_half ) )
+						$new_state->next_action = sprintf( __( 'Flag as %s', 'p2-resolve' ), array_shift( array_values( $second_half ) )->name );
+					else if ( ! $new_state->next_action && count( $first_half ) )
+						$new_state->next_action = sprintf( __( 'Flag as %s', 'p2-resolve' ), array_shift( array_values( $first_half ) )->name );
+					array_push( $this->states, $new_state );
+					$this->states = array_merge( $this->states, $second_half );
+				}
+			}
+
+			// Reindex to ensure we're maintaining the appropriate index
+			$this->states = array_values( $this->states );
+		}
+
+		// Remove any states the user wanted to remove
+		foreach( $this->states as $key => $state ) {
+			if ( in_array( $state->slug, $this->states_to_remove ) ) {
+				unset( $this->states[$key] );
+			}
+		}
+		// Reindex if we need to
+		$this->states = array_values( $this->states );
+		$this->states = apply_filters( 'p2_resolved_posts_states', $this->states );
 
 		if ( ! term_exists( 'unresolved', self::taxonomy ) )
 			wp_insert_term( 'unresolved', self::taxonomy );
@@ -198,6 +254,42 @@ class P2_Resolved_Posts {
 		if ( empty( $state ) || is_wp_error( $state ) )
 			return false;
 		return array_shift( wp_filter_object_list( $this->states, array( 'slug' => $state[0]->slug ) ) );
+	}
+
+	/**
+	 * Add a state to the set of available states
+	 *
+	 * @since 0.3
+	 *
+	 * @param string $slug Unique identifier for the state (e.g. "inprogress")
+	 * @param string $name State's name (e.g. "In-Progress" )
+	 * @param string|array $position Where the state should appear in the list of states (e.g. 'last' or array( 'after' => 'unresolved' ))
+	 */
+	public function add_state( $slug, $name, $position = 'last', $link_text = false, $next_action = false ) {
+		if ( did_action( 'init' ) )
+			_doing_it_wrong( 'P2ResolvedPosts()->add_state()', __( "Adding a state needs to happen before 'init'", 'p2-resolve' ) );
+
+		$this->states_to_add[] = (object)array(
+				'slug'        => $slug,
+				'name'        => $name,
+				'position'    => $position,
+				'link_text'   => $link_text,
+				'next_action' => $next_action,
+			);
+	}
+
+	/**
+	 * Remove a state from the set of available states
+	 *
+	 * @since 0.3
+	 *
+	 * @param string $slug Slug for the state you'd like to remove
+	 */
+	public function remove_state( $slug ) {
+		if ( did_action( 'init' ) )
+			_doing_it_wrong( 'P2ResolvedPosts()->remove_state()', __( "Removing a state needs to happen before 'init'", 'p2-resolve' ) );
+
+		$this->states_to_remove[] = $slug;
 	}
 
 	/**
