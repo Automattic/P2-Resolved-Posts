@@ -323,8 +323,8 @@ class P2_Resolved_Posts {
 			'field' => 'slug',
 			'operator' => 'IN',
 		);
-		if ( isset( $_GET['tags'] ) || isset( $_GET['post_tag'] ) ) {
-				$filter_tags = ( isset( $_GET['tags'] ) ) ? $_GET['tags'] : $_GET['post_tag'];
+		if ( !empty( $_GET['tags'] ) || !empty( $_GET['post_tag'] ) ) {
+			$filter_tags = ( !empty( $_GET['tags'] ) ) ? $_GET['tags'] : $_GET['post_tag'];
 			$filter_tags = (array)explode( ',', $filter_tags );
 	 		foreach( (array)$filter_tags as $filter_tag ) {
 	 			$filter_tag = sanitize_key( $filter_tag );
@@ -342,8 +342,6 @@ class P2_Resolved_Posts {
 	 			$qvs['tax_query'][] = $new_tax_query;
 	 		}
 	 	}
-	 	if ( isset( $_GET['order'] ) && in_array( strtolower( $_GET['order'] ), array( 'asc', 'desc' ) ) )
-	 		$qvs['order'] = sanitize_key( $_GET['order'] );
 
 		return $qvs;
 	}

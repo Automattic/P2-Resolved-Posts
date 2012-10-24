@@ -188,11 +188,11 @@
  		$state = ( ! isset( $state ) ) ? $p2_resolved_posts->get_next_state( $p2_resolved_posts->get_first_state()->slug )->slug : $state;
 
  		echo $before_widget;
- 		$link_args = array(
+ 		$link_args = array_filter( array(
  				'resolved' => $state,
  				'tags' => $filter_tags,
  				'order' => $order,
-	 		);
+	 		) );
  		$more_link = add_query_arg( $link_args, get_site_url() );
  		if ( $title )
  			echo $before_title . $title . '&nbsp;<a title="' . esc_attr( __( 'See all matching unresolved posts', 'p2-resolved-posts' ) ) . '" href="' . esc_url( $more_link ) . '">&raquo;</a>' . $after_title;
