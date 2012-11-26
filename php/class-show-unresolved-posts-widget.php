@@ -234,7 +234,7 @@
  				echo '<p class="p2-resolved-posts-show-unresolved-posts-pagination">';
  				if ( $unresolved_posts->found_posts > $posts_per_page )
 		 			echo '<a href="#" class="p2-resolved-posts-previous-posts p2-resolved-posts-pagination-link" class="inactive">' . __( '&larr;', 'p2-resolved-posts' ) . '</a>&nbsp;&nbsp;';
-		 		echo sprintf( __( 'Showing <span class="p2-resolved-posts-first-post">1</span>-<span class="p2-resolved-posts-last-post">%1$d</span> of <span class="p2-resolved-posts-total-posts">%2$d</span> %3$s posts'), esc_html( $posts_per_page ), esc_html( $unresolved_posts->found_posts ), esc_html( $slug ) );
+		 		echo sprintf( __( 'Showing <span class="p2-resolved-posts-first-post">1</span>-<span class="p2-resolved-posts-last-post">%1$d</span> of <span class="p2-resolved-posts-total-posts">%2$d</span> %3$s posts'), esc_html( $posts_per_page ), esc_html( $unresolved_posts->found_posts ), esc_html( $state ) );
 		 		if ( $unresolved_posts->found_posts > $posts_per_page )
 		 			echo '&nbsp;&nbsp;<a href="#" class="p2-resolved-posts-next-posts p2-resolved-posts-pagination-link">' . __( '&rarr;', 'p2-resolved-posts' ) . '</a>';
 		 		echo '</p>';

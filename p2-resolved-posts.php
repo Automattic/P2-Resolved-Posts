@@ -516,7 +516,7 @@ class P2_Resolved_Posts {
 		}
 
 		</style>
-		<?
+		<?php
 	}
 
 	/**
@@ -586,7 +586,7 @@ class P2_Resolved_Posts {
 			});
 		});
 		</script>
-		<?
+		<?php
 	}
 
 	/**
