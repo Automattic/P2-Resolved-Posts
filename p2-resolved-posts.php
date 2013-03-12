@@ -182,7 +182,7 @@ class P2_Resolved_Posts {
 		// Posts can be marked unresolved automatically by default
 		// if the user wishes
 		if ( apply_filters( 'p2_resolved_posts_mark_new_as_unresolved', false ) )
-			add_action( 'publish_post', array( $this, 'mark_new_as_unresolved' ), 10, 2 );
+			add_action( 'transition_post_status', array( $this, 'mark_new_as_unresolved' ), 10, 3 );
 	}
 
 	/**
@@ -733,10 +733,13 @@ class P2_Resolved_Posts {
 	 *
 	 * @since 0.2
 	 */
-	function mark_new_as_unresolved( $post_id, $post ) {
+	function mark_new_as_unresolved( $new_status, $old_status, $post ) {
+
+		if ( 'publish' != $new_status || 'publish' == $old_status )
+			return;
 
 		// Allow certain types of posts to not be marked as unresolved
-		if ( !apply_filters( 'p2_resolved_posts_maybe_mark_new_as_unresolved', true, $post ) )
+		if ( ! apply_filters( 'p2_resolved_posts_maybe_mark_new_as_unresolved', true, $post ) )
 			return;
 
 		$new_state = $this->get_next_state( $this->get_first_state()->slug );
