@@ -3,8 +3,8 @@
  * Description: Allows you to mark P2 posts for resolution and filter by state
  * Author: Daniel Bachhuber (and Andrew Nacin)
  * Author URI: http://danielbachhuber.com/
- * Contributors: Hugo Baeta (css)
- * Version: 0.3.1
+ * Contributors: Hugo Baeta (css), Joey Kudish
+ * Version: 0.4-alpha
  */
 
 /**
