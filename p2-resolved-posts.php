@@ -661,13 +661,21 @@ class P2_Resolved_Posts {
 		if ( ! taxonomy_exists( self::taxonomy ) )
 			$this->register_taxonomy();
 
-		wp_set_object_terms( $post_id, (array)$state, self::taxonomy, false );
 		$args = array(
-				'new_state' => $state,
-			);
-		$args = $this->log_state_change( $post_id, $args );
-		clean_object_term_cache( $post_id, get_post_type( $post_id ) );
-		do_action( 'p2_resolved_posts_changed_state', $state, $post_id );
+			'new_state' => $state,
+		);
+
+		// check if the current state is already the state we're trying to set and if so, don't change it and don't record it
+		$existing_state = wp_get_object_terms( $post_id, self::taxonomy, array( 'fields' => 'slugs' ) );
+		if ( in_array( $state, $existing_state ) ) {
+			do_action( 'p2_resolved_posts_change_state_already_has_state', $state, $post_id );
+			$args = $this->log_state_change( $post_id, $args, false ); // we need to do this so that the response we send remains proper
+		} else {
+			wp_set_object_terms( $post_id, (array)$state, self::taxonomy, false );
+			$args = $this->log_state_change( $post_id, $args );
+			clean_object_term_cache( $post_id, get_post_type( $post_id ) );
+			do_action( 'p2_resolved_posts_changed_state', $state, $post_id );
+		}
 
 		$state_obj = $this->get_state( $state );
 		$args['next_action'] = $state_obj->next_action;
@@ -683,7 +691,7 @@ class P2_Resolved_Posts {
 	 *
 	 * @since 0.2
 	 */
-	function log_state_change( $post_id, $args = array() ) {
+	function log_state_change( $post_id, $args = array(), $record_meta = true ) {
 
 		$defaults = array(
 				'user_login' => wp_get_current_user()->user_login,
@@ -691,10 +699,13 @@ class P2_Resolved_Posts {
 				'timestamp' => time(),
 			);
 		$args = array_merge( $defaults, $args );
-		add_post_meta( $post_id, self::audit_log_key, $args );
+
+		if ( $record_meta )
+			add_post_meta( $post_id, self::audit_log_key, $args );
+
 		return $args;
 	}
-
+	
 	/**
 	 * Produce the HTML for a single audit log
 	 *
