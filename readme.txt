@@ -38,7 +38,7 @@ Feel free to ask a question in the forums!
 == Changelog ==
 
 = 0.4 =
-* Bug fix: prevent duplicate state change events
+* Bug fix: prevent duplicate state change events. Props jkudish
 
 = 0.3.1 (Nov. 30, 2012) =
 * Bug fix: No mo' PHP short tags
