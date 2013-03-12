@@ -754,7 +754,7 @@ class P2_Resolved_Posts {
 			return;
 
 		$new_state = $this->get_next_state( $this->get_first_state()->slug );
-		$this->change_state( $post_id, $new_state->slug );
+		$this->change_state( $post->ID, $new_state->slug );
 	}
 
 }
