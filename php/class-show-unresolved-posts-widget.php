@@ -208,6 +208,7 @@
 	 							),
 	 					),
 	 				'order' => sanitize_key( $order ),
+					'ignore_sticky_posts' => 1,
 	 			);
 	 		$filter_tags = (array)explode( ',', $filter_tags );
 	 		foreach( (array)$filter_tags as $filter_tag ) {
