@@ -223,7 +223,11 @@ class P2_Resolved_Posts {
 	 * Get the first state this post can be changed to
 	 */
 	function get_first_state() {
-		return array_shift( array_values( $this->states ) );
+
+		$states = array_values( $this->states );
+
+		return array_shift( $states );
+
 	}
 
 	/**
