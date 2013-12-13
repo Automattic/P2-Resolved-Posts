@@ -6,7 +6,7 @@
  * @since 0.2
  * @see https://github.com/wp-cli/wp-cli
  */
-WP_CLI::addCommand( 'p2-resolved-posts', 'P2ResolvedPosts_Command' );
+WP_CLI::add_command( 'p2-resolved-posts', 'P2ResolvedPosts_Command' );
 class P2ResolvedPosts_Command extends WP_CLI_Command {
 
 	/**
