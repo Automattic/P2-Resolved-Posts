@@ -3,8 +3,8 @@
  * Description: Allows you to mark P2 posts for resolution and filter by state
  * Author: Daniel Bachhuber (and Andrew Nacin)
  * Author URI: http://danielbachhuber.com/
- * Contributors: Hugo Baeta (css)
- * Version: 0.3.1
+ * Contributors: Hugo Baeta (css), Joey Kudish
+ * Version: 0.4-alpha
  */
 
 /**
@@ -182,7 +182,7 @@ class P2_Resolved_Posts {
 		// Posts can be marked unresolved automatically by default
 		// if the user wishes
 		if ( apply_filters( 'p2_resolved_posts_mark_new_as_unresolved', false ) )
-			add_action( 'publish_post', array( $this, 'mark_new_as_unresolved' ), 10, 2 );
+			add_action( 'transition_post_status', array( $this, 'mark_new_as_unresolved' ), 10, 3 );
 	}
 
 	/**
@@ -223,7 +223,11 @@ class P2_Resolved_Posts {
 	 * Get the first state this post can be changed to
 	 */
 	function get_first_state() {
-		return array_shift( array_values( $this->states ) );
+
+		$states = array_values( $this->states );
+
+		return array_shift( $states );
+
 	}
 
 	/**
@@ -661,13 +665,21 @@ class P2_Resolved_Posts {
 		if ( ! taxonomy_exists( self::taxonomy ) )
 			$this->register_taxonomy();
 
-		wp_set_object_terms( $post_id, (array)$state, self::taxonomy, false );
 		$args = array(
-				'new_state' => $state,
-			);
-		$args = $this->log_state_change( $post_id, $args );
-		clean_object_term_cache( $post_id, get_post_type( $post_id ) );
-		do_action( 'p2_resolved_posts_changed_state', $state, $post_id );
+			'new_state' => $state,
+		);
+
+		// check if the current state is already the state we're trying to set and if so, don't change it and don't record it
+		$existing_state = wp_get_object_terms( $post_id, self::taxonomy, array( 'fields' => 'slugs' ) );
+		if ( in_array( $state, $existing_state ) ) {
+			do_action( 'p2_resolved_posts_change_state_already_has_state', $state, $post_id );
+			$args = $this->log_state_change( $post_id, $args, false ); // we need to do this so that the response we send remains proper
+		} else {
+			wp_set_object_terms( $post_id, (array)$state, self::taxonomy, false );
+			$args = $this->log_state_change( $post_id, $args );
+			clean_object_term_cache( $post_id, get_post_type( $post_id ) );
+			do_action( 'p2_resolved_posts_changed_state', $state, $post_id );
+		}
 
 		$state_obj = $this->get_state( $state );
 		$args['next_action'] = $state_obj->next_action;
@@ -683,7 +695,7 @@ class P2_Resolved_Posts {
 	 *
 	 * @since 0.2
 	 */
-	function log_state_change( $post_id, $args = array() ) {
+	function log_state_change( $post_id, $args = array(), $record_meta = true ) {
 
 		$defaults = array(
 				'user_login' => wp_get_current_user()->user_login,
@@ -691,10 +703,13 @@ class P2_Resolved_Posts {
 				'timestamp' => time(),
 			);
 		$args = array_merge( $defaults, $args );
-		add_post_meta( $post_id, self::audit_log_key, $args );
+
+		if ( $record_meta )
+			add_post_meta( $post_id, self::audit_log_key, $args );
+
 		return $args;
 	}
-
+	
 	/**
 	 * Produce the HTML for a single audit log
 	 *
@@ -733,14 +748,17 @@ class P2_Resolved_Posts {
 	 *
 	 * @since 0.2
 	 */
-	function mark_new_as_unresolved( $post_id, $post ) {
+	function mark_new_as_unresolved( $new_status, $old_status, $post ) {
+
+		if ( 'publish' != $new_status || 'publish' == $old_status )
+			return;
 
 		// Allow certain types of posts to not be marked as unresolved
-		if ( !apply_filters( 'p2_resolved_posts_maybe_mark_new_as_unresolved', true, $post ) )
+		if ( ! apply_filters( 'p2_resolved_posts_maybe_mark_new_as_unresolved', true, $post ) )
 			return;
 
 		$new_state = $this->get_next_state( $this->get_first_state()->slug );
-		$this->change_state( $post_id, $new_state->slug );
+		$this->change_state( $post->ID, $new_state->slug );
 	}
 
 }
