@@ -73,7 +73,7 @@ class P2_Resolved_Posts {
 	 */
 	function after_setup_theme() {
 
-		load_plugin_textdomain( 'p2-resolve', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+		load_plugin_textdomain( 'p2-resolved-posts', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 
 		if ( ! class_exists( 'P2' ) ) {
 			// Don't run the plugin if P2 isn't active, but display an admin notice
@@ -103,21 +103,21 @@ class P2_Resolved_Posts {
 		$this->states = array(
 				(object)array(
 						'slug'          => 'normal',
-						'name'          => __( 'Normal', 'p2-resolve' ),
-						'link_text'     => __( 'Flag unresolved', 'p2-resolve' ),
-						'next_action'   => __( 'Flag as unresolved', 'p2-resolve' ),
+						'name'          => __( 'Normal', 'p2-resolved-posts' ),
+						'link_text'     => __( 'Flag unresolved', 'p2-resolved-posts' ),
+						'next_action'   => __( 'Flag as unresolved', 'p2-resolved-posts' ),
 					),
 				(object)array(
 						'slug'          => 'unresolved',
-						'name'          => __( 'Unresolved', 'p2-resolve' ),
-						'link_text'     => __( 'Unresolved', 'p2-resolve' ),
-						'next_action'   => __( 'Flag as Resolved', 'p2-resolve' ),
+						'name'          => __( 'Unresolved', 'p2-resolved-posts' ),
+						'link_text'     => __( 'Unresolved', 'p2-resolved-posts' ),
+						'next_action'   => __( 'Flag as Resolved', 'p2-resolved-posts' ),
 					),
 				(object)array(
 						'slug'          => 'resolved',
-						'name'          => __( 'Resolved', 'p2-resolve' ),
-						'link_text'     => __( 'Resolved', 'p2-resolve' ),
-						'next_action'   => __( 'Remove resolved flag', 'p2-resolve' ),
+						'name'          => __( 'Resolved', 'p2-resolved-posts' ),
+						'link_text'     => __( 'Resolved', 'p2-resolved-posts' ),
+						'next_action'   => __( 'Remove resolved flag', 'p2-resolved-posts' ),
 					),
 			);
 		// Add any states the user wants added using the custom helper function
@@ -130,12 +130,12 @@ class P2_Resolved_Posts {
 			if ( 'first' == $new_state->position ) {
 				// Default next_action text if missing
 				if ( ! $new_state->next_action )
-					$new_state->next_action = sprintf( __( 'Flag as %s', 'p2-resolve' ), $this->get_next_state( $this->get_first_state()->slug )->name );
+					$new_state->next_action = sprintf( __( 'Flag as %s', 'p2-resolved-posts' ), $this->get_next_state( $this->get_first_state()->slug )->name );
 				array_unshift( $this->states, $new_state );
 			} else if ( 'last' == $new_state->position ) {
 				// Default next_action text if missing
 				if ( ! $new_state->next_action )
-					$new_state->next_action = sprintf( __( 'Flag as %s', 'p2-resolve' ), $this->get_next_state( $this->get_last_state()->slug )->name );
+					$new_state->next_action = sprintf( __( 'Flag as %s', 'p2-resolved-posts' ), $this->get_next_state( $this->get_last_state()->slug )->name );
 				array_push( $this->states, $new_state );
 			} else if ( ! empty( $new_state->position['after'] ) || ! empty( $new_state->position['before'] ) ) {
 				if ( ! empty( $new_state->position['after'] ) ) {
@@ -154,9 +154,9 @@ class P2_Resolved_Posts {
 					$second_half = array_slice( $this->states, - ( count( $this->states ) - $index ) );
 					$this->states = $first_half;
 					if ( ! $new_state->next_action && count( $second_half ) )
-						$new_state->next_action = sprintf( __( 'Flag as %s', 'p2-resolve' ), array_shift( array_values( $second_half ) )->name );
+						$new_state->next_action = sprintf( __( 'Flag as %s', 'p2-resolved-posts' ), array_shift( array_values( $second_half ) )->name );
 					else if ( ! $new_state->next_action && count( $first_half ) )
-						$new_state->next_action = sprintf( __( 'Flag as %s', 'p2-resolve' ), array_shift( array_values( $first_half ) )->name );
+						$new_state->next_action = sprintf( __( 'Flag as %s', 'p2-resolved-posts' ), array_shift( array_values( $first_half ) )->name );
 					array_push( $this->states, $new_state );
 					$this->states = array_merge( $this->states, $second_half );
 				}
@@ -189,7 +189,7 @@ class P2_Resolved_Posts {
 	 * Display an admin notice if the plugin is active but P2 isn't enabled
 	 */
 	function action_admin_notices() {
-		$message = sprintf( __( "P2 Resolved Posts is enabled. You'll also need to activate the <a href='%s' target='_blank'>P2 theme</a> to start using the plugin.", 'p2-resolve' ), 'http://p2theme.com/' );
+		$message = sprintf( __( "P2 Resolved Posts is enabled. You'll also need to activate the <a href='%s' target='_blank'>P2 theme</a> to start using the plugin.", 'p2-resolved-posts' ), 'http://p2theme.com/' );
 		echo '<div class="error"><p>' . $message . '</p></div>';
 	}
 
@@ -271,7 +271,7 @@ class P2_Resolved_Posts {
 	 */
 	public function add_state( $slug, $name, $position = 'last', $link_text = false, $next_action = false ) {
 		if ( did_action( 'init' ) )
-			_doing_it_wrong( 'P2ResolvedPosts()->add_state()', __( "Adding a state needs to happen before 'init'", 'p2-resolve' ) );
+			_doing_it_wrong( 'P2ResolvedPosts()->add_state()', __( "Adding a state needs to happen before 'init'", 'p2-resolved-posts' ) );
 
 		$this->states_to_add[] = (object)array(
 				'slug'        => $slug,
@@ -291,7 +291,7 @@ class P2_Resolved_Posts {
 	 */
 	public function remove_state( $slug ) {
 		if ( did_action( 'init' ) )
-			_doing_it_wrong( 'P2ResolvedPosts()->remove_state()', __( "Removing a state needs to happen before 'init'", 'p2-resolve' ) );
+			_doing_it_wrong( 'P2ResolvedPosts()->remove_state()', __( "Removing a state needs to happen before 'init'", 'p2-resolved-posts' ) );
 
 		$this->states_to_remove[] = $slug;
 	}
@@ -618,18 +618,18 @@ class P2_Resolved_Posts {
 
 		// Check that the user is who they say they are
 		if ( ! wp_verify_nonce( $_GET['nonce'], 'p2-resolve-' . $post_id ) )
-			$this->do_response( 'error', array( 'message' => __( "Doin' something fishy, huh?", 'p2-resolve' ) ) );
+			$this->do_response( 'error', array( 'message' => __( "Doin' something fishy, huh?", 'p2-resolved-posts' ) ) );
 
 		// Check that it's a valid state
 		if ( in_array( $_GET['mark'], $this->get_state_slugs() ) )
 			$state = sanitize_key( $_GET['mark'] );
 		else
-			$this->do_response( 'error', array( 'message' => __( 'Bad state', 'p2-resolve' ) ) );
+			$this->do_response( 'error', array( 'message' => __( 'Bad state', 'p2-resolved-posts' ) ) );
 
 		// Check that the post is valid
 		$post = get_post( $post_id );
 		if ( !$post )
-			$this->do_response( 'error', array( 'message' => __( 'Invalid post id', 'p2-resolve' ) ) );
+			$this->do_response( 'error', array( 'message' => __( 'Invalid post id', 'p2-resolved-posts' ) ) );
 
 		$status = 'ok';
 		$data = array(
@@ -719,7 +719,7 @@ class P2_Resolved_Posts {
 
 		$date = get_date_from_gmt( date( 'Y-m-d H:i:s', $args['timestamp'] ), get_option( 'date_format' ) );
 		$time = get_date_from_gmt( date( 'Y-m-d H:i:s', $args['timestamp'] ), get_option( 'time_format' ) );
-		$date_time = sprintf( __( '<span class="date-time">%1$s on %2$s</span>', 'p2-resolve' ), esc_html( $time ), esc_html( $date ) );
+		$date_time = sprintf( __( '<span class="date-time">%1$s on %2$s</span>', 'p2-resolved-posts' ), esc_html( $time ), esc_html( $date ) );
 
 		$user = get_user_by( 'login', $args['user_login'] );
 		// Accomodate for removed users
@@ -728,14 +728,14 @@ class P2_Resolved_Posts {
 			$display_name = $user->display_name;
 		} else {
 			$avatar = '';
-			$display_name = __( 'Someone', 'p2-resolve' );
+			$display_name = __( 'Someone', 'p2-resolved-posts' );
 		}
 
 		// If there's a state currently set
 		if ( $args['new_state'] )
-			$text = sprintf( __( '%1$s marked this %2$s<br />%3$s', 'p2-resolve' ), esc_html( $display_name ), esc_html( $args['new_state'] ), $date_time );
+			$text = sprintf( __( '%1$s marked this %2$s<br />%3$s', 'p2-resolved-posts' ), esc_html( $display_name ), esc_html( $args['new_state'] ), $date_time );
 		else
-			$text = sprintf( __( '%1$s removed resolution<br />%2$s', 'p2-resolve' ), esc_html( $display_name ), $date_time );
+			$text = sprintf( __( '%1$s removed resolution<br />%2$s', 'p2-resolved-posts' ), esc_html( $display_name ), $date_time );
 
 		$html = '<li>' . $avatar . '<span class="audit-log-text">' . $text . '</span></li>';
 		return $html;
