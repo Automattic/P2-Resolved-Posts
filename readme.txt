@@ -38,6 +38,7 @@ Feel free to ask a question in the forums!
 == Changelog ==
 
 = 0.4 =
+* New Spanish translation, courtesy of [bertobox](https://github.com/bertobox).
 * Bug fix: prevent duplicate state change events. Props jkudish
 
 = 0.3.1 (Nov. 30, 2012) =
