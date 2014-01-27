@@ -5,6 +5,8 @@
  * Author URI: http://danielbachhuber.com/
  * Contributors: Hugo Baeta (css), Joey Kudish
  * Version: 0.4-alpha
+ * Text Domain: p2-resolved-posts
+ * Domain Path: /languages
  */
 
 /**
