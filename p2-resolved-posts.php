@@ -75,8 +75,6 @@ class P2_Resolved_Posts {
 	 */
 	function after_setup_theme() {
 
-		load_plugin_textdomain( 'p2-resolved-posts', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
-
 		if ( ! class_exists( 'P2' ) ) {
 			// Don't run the plugin if P2 isn't active, but display an admin notice
 			add_action( 'admin_notices', array( $this, 'action_admin_notices' ) );
@@ -99,6 +97,8 @@ class P2_Resolved_Posts {
 	 * Load textdomain, register the taxonomy, etc.
 	 */
 	function action_init() {
+
+		load_plugin_textdomain( 'p2-resolved-posts', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 
 		$this->register_taxonomy();
 
