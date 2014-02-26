@@ -4,7 +4,7 @@
  * Author: Daniel Bachhuber (and Andrew Nacin)
  * Author URI: http://danielbachhuber.com/
  * Contributors: Hugo Baeta (css), Joey Kudish
- * Version: 0.4-alpha
+ * Version: 0.3.2
  * Text Domain: p2-resolved-posts
  * Domain Path: /languages
  */
