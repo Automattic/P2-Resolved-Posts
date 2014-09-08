@@ -420,7 +420,8 @@ class P2_Resolved_Posts {
 		}
 		$output .= '</ul></span>';
 
-		echo $output;
+		if ( is_user_logged_in() )
+			echo $output;
 	}
 
 	/**
