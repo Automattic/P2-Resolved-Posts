@@ -3,8 +3,8 @@
  * Description: Allows you to mark P2 posts for resolution and filter by state
  * Author: Daniel Bachhuber (and Andrew Nacin)
  * Author URI: http://danielbachhuber.com/
- * Contributors: Hugo Baeta (css), Joey Kudish
- * Version: 0.3.2
+ * Contributors: Hugo Baeta (css), Joey Kudish, Allen Snook
+ * Version: 0.3.3
  * Text Domain: p2-resolved-posts
  * Domain Path: /languages
  */
@@ -408,6 +408,12 @@ class P2_Resolved_Posts {
 		$next_action = $existing_state->next_action;
 		$text = $existing_state->link_text;
 
+		if ( ! is_user_logged_in() ) {
+			$css[] = 'p2-nopriv';
+			$link = '#';
+			$next_action = __( 'Please log in to change post states.', 'p2-resolved-posts' );
+		}
+
 		$output = ' | <span class="p2-resolve-wrap"><a title="' . esc_attr( $next_action ) . '" href="' . esc_url( $link ) . '" class="' . esc_attr( implode( ' ', $css ) ) . '">' . esc_html( $text ) . '</a>';
 
 		// Hide our audit log output here too
@@ -563,6 +569,12 @@ class P2_Resolved_Posts {
 
 			jQuery('.actions .p2-resolve-link').click(function(){
 				var original_link = jQuery(this);
+				// Check for nopriv
+				if ( jQuery( this ).hasClass( 'p2-nopriv' ) ) {
+					alert( '<?php echo esc_js( __( 'Please log in to change post states.', 'p2-resolved-posts' ) ); ?>' );
+					return false;
+				}
+
 				// Mark the thread as unresolved
 				jQuery(this).html('Saving...');
 				jQuery(this).addClass('p2-resolve-ajax-action');
@@ -617,6 +629,10 @@ class P2_Resolved_Posts {
 			return;
 
 		$post_id = intval( $_GET['post-id'] );
+
+		// Only allowed logged in users to change the state
+		if ( ! is_user_logged_in() )
+			$this->do_response( 'error', array( 'message' => __( "Only logged in users may change resolved status", 'p2-resolved-posts' ) ) );
 
 		// Check that the user is who they say they are
 		if ( ! wp_verify_nonce( $_GET['nonce'], 'p2-resolve-' . $post_id ) )

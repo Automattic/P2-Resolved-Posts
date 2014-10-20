@@ -1,9 +1,9 @@
 === P2 Resolved Posts ===
-Contributors: danielbachhuber, automattic
+Contributors: danielbachhuber, automattic, allendav
 Tags: gtd, productivity, workflow, p2
 Requires at least: 3.1
-Tested up to: 3.8.1
-Stable tag: 0.3.2
+Tested up to: 4.0
+Stable tag: 0.3.3
 
 Lightweight GTD for the P2 WordPress theme.
 
@@ -36,6 +36,9 @@ If the automatic process above fails, follow these simple steps to do a manual i
 Feel free to ask a question in the forums!
 
 == Changelog ==
+
+= 0.3.3 (Oct. 17, 2014) =
+* Make it so that a user must be logged in to change a post's resolved state
 
 = 0.3.2 (Feb. 26, 2014) =
 * New Spanish translation, courtesy of [bertobox](https://github.com/bertobox).
