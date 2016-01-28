@@ -37,11 +37,12 @@ Feel free to ask a question in the forums!
 
 == Changelog ==
 
-= 0.3.5 (Jan. ?, 2016) =
+= 0.3.5 (Jan. 29, 2016) =
 * Updated to avoid PHP Strict notices
+* Now uses WordPress.org Language Packs for translations, submit translations through https://translate.wordpress.org/projects/wp-plugins/p2-resolved-posts
 
 = 0.3.4 (Jan. 7, 2015) =
-* Verified working with WordPress 4.1 *
+* Verified working with WordPress 4.1
 
 = 0.3.3 (Oct. 17, 2014) =
 * Make it so that a user must be logged in to change a post's resolved state

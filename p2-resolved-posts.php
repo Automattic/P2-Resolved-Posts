@@ -6,7 +6,6 @@
  * Contributors: Hugo Baeta (css), Joey Kudish, Allen Snook
  * Version: 0.3.5-alpha
  * Text Domain: p2-resolved-posts
- * Domain Path: /languages
  */
 
 /**
@@ -98,7 +97,7 @@ class P2_Resolved_Posts {
 	 */
 	function action_init() {
 
-		load_plugin_textdomain( 'p2-resolved-posts', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+		load_plugin_textdomain( 'p2-resolved-posts' );
 
 		$this->register_taxonomy();
 
