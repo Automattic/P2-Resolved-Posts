@@ -716,10 +716,10 @@ class P2_Resolved_Posts {
 	function log_state_change( $post_id, $args = array(), $record_meta = true ) {
 
 		$defaults = array(
-				'user_login' => wp_get_current_user()->user_login,
-				'new_state' => '',
-				'timestamp' => time(),
-			);
+			'user_login' => wp_get_current_user()->user_login,
+			'new_state' => '',
+			'timestamp' => time(),
+		);
 		$args = array_merge( $defaults, $args );
 
 		if ( $record_meta )
