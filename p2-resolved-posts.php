@@ -156,7 +156,7 @@ class P2_Resolved_Posts {
 					$second_half = array_slice( $this->states, - ( count( $this->states ) - $index ) );
 					$this->states = $first_half;
 					if ( ! $new_state->next_action && count( $second_half ) ) {
-						$second_half_values = array_values( $second_half )
+						$second_half_values = array_values( $second_half );
 						$new_state->next_action = sprintf( __( 'Flag as %s', 'p2-resolved-posts' ), array_shift( $second_half_values )->name );
 					} else if ( ! $new_state->next_action && count( $first_half ) ) {
 						$first_half_values = array_values( $first_half );
@@ -221,7 +221,7 @@ class P2_Resolved_Posts {
 	 * Given a slug, get the state
 	 */
 	function get_state( $slug ) {
-		$states = wp_filter_object_list( $this->states, array( 'slug' => $slug ) )
+		$states = wp_filter_object_list( $this->states, array( 'slug' => $slug ) );
 		return array_shift( $states );
 	}
 
