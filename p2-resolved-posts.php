@@ -147,7 +147,7 @@ class P2_Resolved_Posts {
 					$insert = 'before';
 					$match = $new_state->position['before'];
 				}
-				foreach( $this->states as $key => $state ) {
+				foreach ( $this->states as $key => $state ) {
 					if ( $match != $state->slug )
 						continue;
 
@@ -155,10 +155,13 @@ class P2_Resolved_Posts {
 					$first_half = array_slice( $this->states, 0, $index );
 					$second_half = array_slice( $this->states, - ( count( $this->states ) - $index ) );
 					$this->states = $first_half;
-					if ( ! $new_state->next_action && count( $second_half ) )
-						$new_state->next_action = sprintf( __( 'Flag as %s', 'p2-resolved-posts' ), array_shift( array_values( $second_half ) )->name );
-					else if ( ! $new_state->next_action && count( $first_half ) )
-						$new_state->next_action = sprintf( __( 'Flag as %s', 'p2-resolved-posts' ), array_shift( array_values( $first_half ) )->name );
+					if ( ! $new_state->next_action && count( $second_half ) ) {
+						$second_half_values = array_values( $second_half )
+						$new_state->next_action = sprintf( __( 'Flag as %s', 'p2-resolved-posts' ), array_shift( $second_half_values )->name );
+					} else if ( ! $new_state->next_action && count( $first_half ) ) {
+						$first_half_values = array_values( $first_half );
+						$new_state->next_action = sprintf( __( 'Flag as %s', 'p2-resolved-posts' ), array_shift( $first_half_values )->name );
+					}
 					array_push( $this->states, $new_state );
 					$this->states = array_merge( $this->states, $second_half );
 				}
@@ -218,7 +221,8 @@ class P2_Resolved_Posts {
 	 * Given a slug, get the state
 	 */
 	function get_state( $slug ) {
-		return array_shift( wp_filter_object_list( $this->states, array( 'slug' => $slug ) ) );
+		$states = wp_filter_object_list( $this->states, array( 'slug' => $slug ) )
+		return array_shift( $states );
 	}
 
 	/**
@@ -249,7 +253,8 @@ class P2_Resolved_Posts {
 	 * Get the last state this post can be in
 	 */
 	function get_last_state() {
-		return array_pop( array_values( $this->states ) );
+		$states = array_values( $this->states );
+		return array_pop( $states );
 	}
 
 	/**
