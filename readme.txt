@@ -2,8 +2,8 @@
 Contributors: danielbachhuber, automattic, allendav
 Tags: gtd, productivity, workflow, p2
 Requires at least: 3.1
-Tested up to: 4.0
-Stable tag: 0.3.3
+Tested up to: 4.1
+Stable tag: 0.3.4
 
 Lightweight GTD for the P2 WordPress theme.
 
@@ -36,6 +36,9 @@ If the automatic process above fails, follow these simple steps to do a manual i
 Feel free to ask a question in the forums!
 
 == Changelog ==
+
+= 0.3.4 (Jan. 7, 2015) =
+* Verified working with WordPress 4.1 *
 
 = 0.3.3 (Oct. 17, 2014) =
 * Make it so that a user must be logged in to change a post's resolved state
