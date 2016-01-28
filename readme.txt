@@ -37,6 +37,9 @@ Feel free to ask a question in the forums!
 
 == Changelog ==
 
+= 0.3.5 (Jan. ?, 2016) =
+* Updated to avoid PHP Strict notices
+
 = 0.3.4 (Jan. 7, 2015) =
 * Verified working with WordPress 4.1 *
 
