@@ -2,7 +2,7 @@
 Contributors: danielbachhuber, automattic, allendav
 Tags: gtd, productivity, workflow, p2
 Requires at least: 3.1
-Tested up to: 4.1
+Tested up to: 4.5-alpha
 Stable tag: 0.3.4
 
 Lightweight GTD for the P2 WordPress theme.
