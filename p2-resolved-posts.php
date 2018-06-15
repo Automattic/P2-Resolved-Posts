@@ -278,7 +278,7 @@ class P2_Resolved_Posts {
 	 */
 	public function add_state( $slug, $name, $position = 'last', $link_text = false, $next_action = false ) {
 		if ( did_action( 'init' ) )
-			_doing_it_wrong( 'P2ResolvedPosts()->add_state()', __( "Adding a state needs to happen before 'init'", 'p2-resolved-posts' ) );
+			_doing_it_wrong( 'P2ResolvedPosts()->add_state()', __( "Adding a state needs to happen before 'init'", 'p2-resolved-posts' ), null );
 
 		$this->states_to_add[] = (object)array(
 				'slug'        => $slug,
@@ -298,7 +298,7 @@ class P2_Resolved_Posts {
 	 */
 	public function remove_state( $slug ) {
 		if ( did_action( 'init' ) )
-			_doing_it_wrong( 'P2ResolvedPosts()->remove_state()', __( "Removing a state needs to happen before 'init'", 'p2-resolved-posts' ) );
+			_doing_it_wrong( 'P2ResolvedPosts()->remove_state()', __( "Removing a state needs to happen before 'init'", 'p2-resolved-posts' ), null );
 
 		$this->states_to_remove[] = $slug;
 	}
@@ -390,7 +390,7 @@ class P2_Resolved_Posts {
 				'nonce'         => wp_create_nonce( 'p2-resolve-' . $post_id ),
 				'mark'          => $next_state,
 			);
-		$link = add_query_arg( $args, get_site_url() );
+		$link = add_query_arg( $args, get_site_url( null, '/' ) );
 		return $link;
 	}
 
@@ -579,11 +579,15 @@ class P2_Resolved_Posts {
 					alert( '<?php echo esc_js( __( 'Please log in to change post states.', 'p2-resolved-posts' ) ); ?>' );
 					return false;
 				}
-
+				var reqUrl = original_link.attr('href') + '&ajax';
+				var currentDomain = window.location.protocol + '//' + window.location.hostname + '/';
+				if ( reqUrl.indexOf( currentDomain ) !== 0 ) {
+					return false;
+				}
 				// Mark the thread as unresolved
 				jQuery(this).html('Saving...');
 				jQuery(this).addClass('p2-resolve-ajax-action');
-				jQuery.get( original_link.attr('href') + '&ajax', function(data){
+				jQuery.get( reqUrl, function(data){
 
 					// Reset our classes
 					var post_classes = original_link.closest('.post').attr('class').replace( /state-[a-zA-Z0-9]+/, '' );
