@@ -36,7 +36,7 @@ If the automatic process above fails, follow these simple steps to do a manual i
 Feel free to ask a question in the forums!
 
 == Changelog ==
-= 0.3.6 (Jun. 15, 2018)
+= 0.3.6 (Jun. 15, 2018) =
 * Updated to avoid PHP 7.2 fatal errors.
 * Fix a JS related bug.
 
